@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Values – Home{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="actions">
+        <div>
+            <a class="bigbutton" href="/check-cik">Check CIK data</a>
+            <div class="sub">Pick a CIK and browse daily values.</div>
+        </div>
+
+        <div>
+            <a class="bigbutton" href="/admin">Admin page</a>
+            <div class="sub">Run data population while the app is running.</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

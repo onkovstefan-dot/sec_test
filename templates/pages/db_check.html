@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}DB Check{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="toolbar">
+        <div class="hint">Preview raw rows from any table (limit defaults to 10 if empty).</div>
+        <div><a class="button" href="/">Home</a></div>
+    </div>
+
+    <form method="GET" action="/db-check">
+        <div>
+            <label for="table">Table</label>
+            <select id="table" name="table">
+                {% for t in tables %}
+                <option value="{{ t }}" {% if t==selected_table %}selected{% endif %}>{{ t }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="limit">Limit</label>
+            <input id="limit" name="limit" type="number" min="1" max="500" placeholder="10" value="{{ limit_raw }}" />
+        </div>
+
+        <button type="submit">Load</button>
+    </form>
+
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if rows and columns %}
+    <table>
+        <thead>
+            <tr>
+                {% for c in columns %}
+                <th>{{ c }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                {% for c in columns %}
+                <td>{{ row.get(c) if row.get(c) is not none else '' }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="hint">No rows to display.</p>
+    {% endif %}
+</div>
+{% endblock %}

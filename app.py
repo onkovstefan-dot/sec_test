@@ -1,8 +1,10 @@
-from flask import Flask
-from api.routes import api_bp
 import os
 
-from db import engine, Base
+from flask import Flask, render_template
+
+from api.blueprint import create_api_blueprint
+from config import Config, configure_logging
+from db import Base, engine
 
 
 def init_db() -> None:
@@ -10,15 +12,45 @@ def init_db() -> None:
 
     Kept out of default startup path to minimize app spin-up time.
     """
+
     Base.metadata.create_all(bind=engine)
 
 
-app = Flask(__name__)
-app.register_blueprint(api_bp)
+def create_app() -> Flask:
+    app = Flask(__name__)
 
-# Optional: initialize tables on startup only when explicitly requested.
-if os.getenv("INIT_DB_ON_STARTUP", "0") == "1":
-    init_db()
+    # Load config from env
+    app.config.from_object(Config)
+
+    # Configure logging
+    configure_logging(app.logger, app.config.get("LOG_LEVEL", "INFO"))
+
+    # Register routes/blueprints (respect feature flags)
+    app.register_blueprint(
+        create_api_blueprint(
+            enable_admin=app.config.get("ENABLE_ADMIN", True),
+            enable_db_check=app.config.get("ENABLE_DB_CHECK", True),
+        )
+    )
+
+    # Error handlers
+    @app.errorhandler(404)
+    def not_found(_err):
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(500)
+    def server_error(_err):
+        return render_template("errors/500.html"), 500
+
+    # Optional: initialize tables on startup only when explicitly requested.
+    if os.getenv("INIT_DB_ON_STARTUP", "0") == "1":
+        init_db()
+
+    return app
+
+
+app = create_app()
+
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)

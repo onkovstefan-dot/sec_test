@@ -1,0 +1,70 @@
+/* Component styles (minimal baseline) */
+
+.navbar {
+    background: var(--primary-dark);
+    color: #fff;
+}
+
+.nav-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-brand {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 0.9rem;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links a {
+    color: #fff;
+    text-decoration: none;
+    opacity: 0.95;
+}
+
+.nav-links a:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+.flash {
+    max-width: 1100px;
+    margin: 1rem auto 0;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+}
+
+.flash.info {
+    border-color: #bcd5ff;
+    background: #f2f7ff;
+}
+
+.flash.error {
+    border-color: #ffd6d6;
+    background: #fff5f5;
+}
+
+.flash.success {
+    border-color: #c8f0d2;
+    background: #f1fff5;
+}
+
+.admin-polling__status {
+    color: var(--muted, #6b7280);
+    font-size: 0.95em;
+}

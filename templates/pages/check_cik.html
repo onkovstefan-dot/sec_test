@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Values – Select CIK{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="toolbar">
+        <div class="hint">Choose a CIK that has at least one daily value.</div>
+        <div><a class="button" href="/">Home</a></div>
+    </div>
+
+    <form method="GET" action="/check-cik">
+        <label for="cik">Select CIK:</label>
+        <select id="cik" name="cik" required>
+            <option value="">-- select a CIK --</option>
+            {% for e in entities %}
+            <option value="{{ e.cik }}" {% if e.cik==cik %}selected{% endif %}>{{ e.cik }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Continue</button>
+    </form>
+
+    {% if message %}
+    <p class="error">{{ message }}</p>
+    {% endif %}
+
+    <p class="hint">After selection, you'll be redirected to the daily values page if data exists.</p>
+</div>
+{% endblock %}

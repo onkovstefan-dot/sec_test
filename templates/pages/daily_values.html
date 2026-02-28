@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Values {{ entity.cik }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="topbar">
+        <div class="meta">
+            <strong>CIK:</strong> {{ entity.cik }} &nbsp; <strong>Entity ID:</strong> {{ entity_id }}
+        </div>
+        <div>
+            <a class="button" href="/">Change CIK</a>
+        </div>
+    </div>
+
+    <form class="filters" method="GET" action="/daily-values">
+        <input type="hidden" name="entity_id" value="{{ entity_id }}" />
+
+        <div>
+            <label for="value_name">Value Name</label>
+            <select id="value_name" name="value_name" multiple size="6">
+                {% for vn in value_name_options %}
+                <option value="{{ vn }}" {% if vn in value_name_filters %}selected{% endif %}>{{ vn }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="unit">Unit</label>
+            <select id="unit" name="unit">
+                <option value="" {% if not unit_filter %}selected{% endif %}>All</option>
+                {% for u in unit_options %}
+                <option value="{{ u }}" {% if u==unit_filter %}selected{% endif %}>{{ u }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">Apply</button>
+        <a class="link" href="/daily-values?entity_id={{ entity_id }}">Clear</a>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Value Name</th>
+                <th>Unit</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if rows and rows|length > 0 %}
+            {% for r in rows %}
+            <tr>
+                <td>{{ r.date }}</td>
+                <td>{{ r.value_name }}</td>
+                <td>{{ r.unit }}</td>
+                <td class="num">{{ r.value }}</td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="4" class="empty">No records found.</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/daily_values.js') }}"></script>
+{% endblock %}

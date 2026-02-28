@@ -1,0 +1,5 @@
+{% if message %}
+<div class="flash {{ message_type|default('info') }}">
+    {{ message }}
+</div>
+{% endif %}
