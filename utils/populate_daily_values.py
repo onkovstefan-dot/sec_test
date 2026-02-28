@@ -25,7 +25,7 @@ Database / correctness notes:
 - Daily values are inserted using SQLite `INSERT OR IGNORE` to safely skip duplicates
   under the `daily_values` uniqueness constraint.
 - Files that cannot be processed are *not* silently skipped; reasons and samples are
-  logged to `populate_daily_values.log`.
+  logged under `logs/` (per-module log files) via the shared app logger.
 
 If you change this file, run the test suite to validate parsing and DB behavior:
 
@@ -57,6 +57,7 @@ from models.units import Unit  # noqa: E402
 from models.dates import DateEntry  # noqa: E402
 from models.daily_values import DailyValue  # noqa: E402
 from models.file_processing import FileProcessing  # noqa: E402
+from logging_utils import get_logger  # noqa: E402
 
 
 def _ts_now() -> str:
@@ -144,24 +145,8 @@ def timed(
     return _decorator
 
 
-# Setup logging
-# Keep a detailed log file for post-run investigation,
-# while still surfacing warnings/errors in console.
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-_file_handler = logging.FileHandler("populate_daily_values.log")
-_file_handler.setLevel(logging.INFO)
-_file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
-
-_console_handler = logging.StreamHandler()
-# Keep console output quiet; warnings (e.g., unprocessed files) are still written to the log file.
-_console_handler.setLevel(logging.ERROR)
-_console_handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
-
-if not logger.handlers:
-    logger.addHandler(_file_handler)
-    logger.addHandler(_console_handler)
+# Setup logging (shared app logger; per-file logs in ./logs/)
+logger = get_logger(__name__)
 
 # Previously we populated from raw_data/submissions.
 # Companyfacts is where the numeric facts/metrics live.

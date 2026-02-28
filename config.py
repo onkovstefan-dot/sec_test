@@ -1,6 +1,8 @@
 import logging
 import os
 
+from logging_utils import configure_app_logging
+
 
 def _env_bool(name: str, default: bool) -> bool:
     v = os.getenv(name)
@@ -22,19 +24,10 @@ class Config:
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
 
 
-def configure_logging(app_logger: logging.Logger, level_name: str) -> None:
-    """Configure application logging in a simple, predictable way."""
+def configure_logging(_app_logger: logging.Logger, level_name: str) -> None:
+    """Backward-compatible shim.
 
-    level = getattr(logging, level_name, logging.INFO)
+    Prefer importing and calling `configure_app_logging` from `logging_utils`.
+    """
 
-    # Avoid duplicate handlers (e.g., in tests or reload scenarios)
-    if app_logger.handlers:
-        app_logger.setLevel(level)
-        return
-
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
-    handler.setFormatter(formatter)
-
-    app_logger.addHandler(handler)
-    app_logger.setLevel(level)
+    configure_app_logging(level_name)

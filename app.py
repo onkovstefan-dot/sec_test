@@ -5,6 +5,7 @@ from flask import Flask, render_template
 from api.blueprint import create_api_blueprint
 from config import configure_logging
 from db import Base, engine
+from logging_utils import configure_app_logging, get_logger
 
 
 def init_db() -> None:
@@ -22,7 +23,11 @@ def create_app() -> Flask:
     # Load config from file.
     app.config.from_pyfile("settings.py")
 
-    # Configure logging
+    # Configure unified app logging (UTC timestamps, per-file logs, daily rotation)
+    configure_app_logging(app.config.get("LOG_LEVEL", "INFO"))
+    logger = get_logger(__name__)
+
+    # Keep legacy call for compatibility; it now delegates to configure_app_logging.
     configure_logging(app.logger, app.config.get("LOG_LEVEL", "INFO"))
 
     # Register routes/blueprints (respect feature flags)
@@ -40,10 +45,12 @@ def create_app() -> Flask:
 
     @app.errorhandler(500)
     def server_error(_err):
+        logger.exception("Unhandled server error")
         return render_template("errors/500.html"), 500
 
     # Optional: initialize tables on startup only when explicitly requested.
     if os.getenv("INIT_DB_ON_STARTUP", "0") == "1":
+        logger.info("INIT_DB_ON_STARTUP=1; initializing database schema")
         init_db()
 
     return app
@@ -53,4 +60,5 @@ app = create_app()
 
 
 if __name__ == "__main__":
+    get_logger(__name__).info("Starting Flask app")
     app.run(debug=True, use_reloader=False)

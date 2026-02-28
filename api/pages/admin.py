@@ -18,7 +18,7 @@ def admin_init_db():
     from db import Base, engine
 
     Base.metadata.create_all(bind=engine)
-    return redirect(url_for("api.admin_page"))
+    return redirect(url_for("api.admin.admin_page"))
 
 
 @admin_bp.route("/recreate-db", methods=["POST"])
@@ -31,10 +31,10 @@ def admin_recreate_db():
             "Refused to recreate DB: missing/invalid confirmation. "
             "Type RECREATE in the confirmation box and submit again."
         )
-        return redirect(url_for("api.admin_page"))
+        return redirect(url_for("api.admin.admin_page"))
 
     recreate_sqlite_db_job.start()
-    return redirect(url_for("api.admin_page"))
+    return redirect(url_for("api.admin.admin_page"))
 
 
 @admin_bp.route("/stop-populate", methods=["POST"])
@@ -44,7 +44,7 @@ def admin_stop_populate():
     This is cooperative; if the script is already running, it may not stop until it finishes.
     """
     populate_daily_values_job.request_stop()
-    return redirect(url_for("api.admin_page"))
+    return redirect(url_for("api.admin.admin_page"))
 
 
 @admin_bp.route("/", methods=["GET", "POST"])
@@ -60,11 +60,13 @@ def admin_page():
 
     # Last log line(s)
     repo_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    populate_log_path = os.path.join(repo_root, "populate_daily_values.log")
+    logs_dir = os.path.join(repo_root, "logs")
+    populate_log_path = os.path.join(logs_dir, "utils_populate_daily_values.log")
     populate_last_log = read_last_log_line(populate_log_path)
-    # recreate_sqlite_db prints to stdout; we don't have a dedicated log file.
-    # Reuse the same shared log file if you redirect output there in the future.
-    recreate_last_log = read_last_log_line(populate_log_path)
+
+    # recreate_sqlite_db uses the shared logger too (app logs) unless you add a dedicated one.
+    recreate_log_path = os.path.join(logs_dir, "app.log")
+    recreate_last_log = read_last_log_line(recreate_log_path)
 
     def fmt_ts(ts):
         if not ts:
