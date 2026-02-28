@@ -3,23 +3,24 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-import json
-import logging
-from datetime import datetime
-from collections import Counter, defaultdict
-from time import perf_counter
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
-from models import Base
-from models.entities import Entity
-from models.value_names import ValueName
-from models.dates import DateEntry
-from models.daily_values import DailyValue
-from models.daily_values_text import DailyValueText
+import json  # noqa: E402
+import logging  # noqa: E402
+from datetime import datetime  # noqa: E402
+from collections import Counter, defaultdict  # noqa: E402
+from time import perf_counter  # noqa: E402
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+from sqlalchemy.exc import IntegrityError  # noqa: E402
+from models import Base  # noqa: E402
+from models.entities import Entity  # noqa: E402
+from models.value_names import ValueName  # noqa: E402
+from models.dates import DateEntry  # noqa: E402
+from models.daily_values import DailyValue  # noqa: E402
+from models.daily_values_text import DailyValueText  # noqa: E402
 
 # Setup logging
-# Keep a detailed log file for post-run investigation, while still surfacing warnings/errors in console.
+# Keep a detailed log file for post-run investigation,
+# while still surfacing warnings/errors in console.
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -99,7 +100,8 @@ def delete_all_daily_values():
         session.commit()
         print(f"Deleted {num_deleted} rows from DailyValue table.")
         logger.warning(
-            f"Deleted {num_deleted} rows from DailyValue table via delete_all_daily_values()."
+            f"Deleted {num_deleted} rows from DailyValue table "
+            f"via delete_all_daily_values()."
         )
     except Exception as e:
         session.rollback()
@@ -212,8 +214,13 @@ def main():
                     cik = data.get("cik")
 
             if recent is None and isinstance(data, dict):
-                # flattened recent payload: top-level arrays like accessionNumber/filingDate/form...
-                if "filings" not in data and "accessionNumber" in data and "filingDate" in data:
+                # flattened recent payload: top-level arrays like
+                # accessionNumber/filingDate/form...
+                if (
+                    "filings" not in data
+                    and "accessionNumber" in data
+                    and "filingDate" in data
+                ):
                     schema = "flattened_recent"
                     recent = data
                     cik = data.get("cik")
@@ -234,7 +241,8 @@ def main():
                 inferred_cik = infer_cik_from_filename(filename)
                 if inferred_cik:
                     logger.info(
-                        "CIK missing in %s (schema=%s). Using inferred CIK %s from filename.",
+                        "CIK missing in %s (schema=%s). Using inferred CIK %s"
+                        " from filename.",
                         filename,
                         schema,
                         inferred_cik,
@@ -244,7 +252,8 @@ def main():
                 else:
                     sample_content = str(data)[:500]
                     logger.error(
-                        "Missing CIK in file %s (schema=%s) and could not infer from filename. Sample content: %s",
+                        "Missing CIK in file %s (schema=%s) and could not"
+                        " infer from filename. Sample content: %s",
                         filename,
                         schema,
                         sample_content,
@@ -267,7 +276,12 @@ def main():
                 error_files.append(filename)
                 continue
 
-            logger.info("File %s detected schema=%s keys=%s", filename, schema, len(recent))
+            logger.info(
+                "File %s detected schema=%s keys=%s",
+                filename,
+                schema,
+                len(recent),
+            )
 
             # Loop over all value names in recent
             for value_name in recent.keys():
@@ -284,9 +298,9 @@ def main():
                     continue
                 # Find the corresponding date array
                 if value_name == "filingDate":
-                    date_values = values
+                    pass  # date is the value itself
                 elif value_name == "reportDate":
-                    date_values = values
+                    pass  # date is the value itself
                 else:
                     # Use filingDate if available, else skip
                     date_values = recent.get("filingDate", [])
@@ -337,23 +351,30 @@ def main():
                             )
                         )
 
-                # Batch flush per value_name to surface constraints earlier without committing per row.
+                # Batch flush per value_name to surface constraints earlier
+                # without committing per row.
                 try:
                     session.flush()
-                except IntegrityError as e:
+                except IntegrityError:
                     session.rollback()
-                    # Duplicates are expected (same entity/value/date). Count and continue.
+                    # Duplicates are expected (same entity/value/date).
+                    # Count and continue.
                     skip_reasons["duplicate_unique_constraint"] += 1
                     error_reasons["IntegrityError"] += 1
-                    # Keep rolling: we don't know which record collided in the batch, so fallback to row-wise insert.
-                    # This is slower, but only for problematic sets.
+                    # Keep rolling: we don't know which record collided in the
+                    # batch, so fallback to row-wise insert. This is slower,
+                    # but only for problematic sets.
                     for idx_val, val in enumerate(values):
                         date_str = None
                         if value_name in ["filingDate", "reportDate"]:
                             date_str = val
-                        elif "filingDate" in recent and idx_val < len(recent["filingDate"]):
+                        elif "filingDate" in recent and idx_val < len(
+                            recent["filingDate"]
+                        ):
                             date_str = recent["filingDate"][idx_val]
-                        elif "reportDate" in recent and idx_val < len(recent["reportDate"]):
+                        elif "reportDate" in recent and idx_val < len(
+                            recent["reportDate"]
+                        ):
                             date_str = recent["reportDate"][idx_val]
                         if not date_str:
                             continue
@@ -402,7 +423,8 @@ def main():
                             session.rollback()
                             error_reasons[type(e2).__name__] += 1
                             logger.error(
-                                "Row insert failed file=%s value_name=%s date=%s: %s",
+                                "Row insert failed file=%s value_name=%s"
+                                " date=%s: %s",
                                 filename,
                                 value_name,
                                 date_str,
@@ -415,16 +437,18 @@ def main():
                 session.commit()
             except IntegrityError:
                 session.rollback()
-                # If we hit integrity errors at commit time, count and proceed.
                 error_reasons["IntegrityError"] += 1
             except Exception as e:
                 session.rollback()
                 error_reasons[type(e).__name__] += 1
-                logger.error("Commit failed for file %s: %s", filename, e, exc_info=True)
+                logger.error(
+                    "Commit failed for file %s: %s", filename, e, exc_info=True
+                )
                 error_files.append(filename)
                 continue
 
-            # Derive successful insert counts (planned - duplicates observed in row-wise fallback)
+            # Derive successful insert counts
+            # (planned - duplicates observed in row-wise fallback)
             file_inserted_numeric = max(inserts_planned_numeric - duplicates_numeric, 0)
             file_inserted_text = max(inserts_planned_text - duplicates_text, 0)
 
@@ -440,7 +464,9 @@ def main():
             totals["duplicates_text"] += duplicates_text
 
             logger.info(
-                "Completed file %s schema=%s: inserted_num=%s inserted_text=%s non_numeric=%s dup_num=%s dup_text=%s elapsed=%.2fs",
+                "Completed file %s schema=%s: inserted_num=%s"
+                " inserted_text=%s non_numeric=%s dup_num=%s"
+                " dup_text=%s elapsed=%.2fs",
                 filename,
                 schema,
                 file_inserted_numeric,
@@ -469,8 +495,11 @@ def main():
     summary_msg = (
         f"Processing complete. Total files: {total_files}, "
         f"Total successful inserts: {inserted_total} "
-        f"(numeric={total_successful_inserts_numeric}, text={total_successful_inserts_text}), "
-        f"Total duplicates skipped (numeric={total_duplicates_numeric}, text={total_duplicates_text}), "
+        f"(numeric={total_successful_inserts_numeric},"
+        f" text={total_successful_inserts_text}), "
+        f"Total duplicates skipped"
+        f" (numeric={total_duplicates_numeric},"
+        f" text={total_duplicates_text}), "
         f"Files with errors: {len(set(error_files))}"
     )
     print(summary_msg)

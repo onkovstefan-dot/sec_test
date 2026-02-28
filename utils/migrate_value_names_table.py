@@ -11,7 +11,8 @@ c = conn.cursor()
 c.execute("""ALTER TABLE value_names RENAME TO value_names_old""")
 
 # 2. Create new table with updated schema
-c.execute("""
+c.execute(
+    """
 CREATE TABLE value_names (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
@@ -19,7 +20,8 @@ CREATE TABLE value_names (
     added_on DATETIME NOT NULL,
     valid_until DATETIME
 )
-""")
+"""
+)
 
 # 3. Copy data from old table to new table
 c.execute(

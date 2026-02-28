@@ -1,5 +1,4 @@
 import json
-import os
 
 
 def process_companyfacts_json(file_path):

@@ -1,9 +1,6 @@
-from flask import Flask, render_template_string
+from flask import Flask
 from api.routes import api_bp
-from db import engine
-from models.submissions_flat import SubmissionsFlat
-from models.companyfacts_flat import *  # Add other models as needed
-from db import Base
+from db import engine, Base
 
 app = Flask(__name__)
 app.register_blueprint(api_bp)

@@ -34,7 +34,11 @@ def test_daily_values_text_schema_and_insert_roundtrip(tmp_path):
 
         got = (
             session.query(DailyValueText)
-            .filter_by(entity_id=entity.id, date_id=date_entry.id, value_name_id=vn.id)
+            .filter_by(
+                entity_id=entity.id,
+                date_id=date_entry.id,
+                value_name_id=vn.id,
+            )
             .one()
         )
         assert got.value_text == "10-K"

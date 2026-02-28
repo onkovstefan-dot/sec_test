@@ -11,7 +11,8 @@ conn = sqlite3.connect(DB_PATH)
 c = conn.cursor()
 
 # Create table with flattened columns based on sample JSON structure
-c.execute("""
+c.execute(
+    """
 CREATE TABLE IF NOT EXISTS submissions_flat (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     filename TEXT,
@@ -72,7 +73,8 @@ CREATE TABLE IF NOT EXISTS submissions_flat (
     filings_recent_primaryDocument TEXT,
     filings_recent_primaryDocDescription TEXT
 )
-""")
+"""
+)
 conn.commit()
 
 # Iterate over all JSON files in submissions directory

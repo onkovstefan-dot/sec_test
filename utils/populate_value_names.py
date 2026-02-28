@@ -2,10 +2,11 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-import json
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from models.value_names import Base, ValueName
+
+import json  # noqa: E402
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+from models.value_names import Base, ValueName  # noqa: E402
 
 SUBMISSIONS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "raw_data", "submissions"
