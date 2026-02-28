@@ -1,3 +1,37 @@
+"""Populate daily SEC-derived values into the SQLite database.
+
+This script ingests SEC JSON payloads stored under `raw_data/` and flattens them into
+primitives suitable for time-series querying:
+
+- **entities**: a company/issuer identified by CIK
+- **dates**: the observation date (typically `end` for facts or `filingDate`/`reportDate` for submissions)
+- **value_names**: the metric/concept name (e.g. `us-gaap.Assets`)
+- **units**: unit-of-measure for a value name (e.g. `USD`, `shares`, `NA`)
+- **daily_values**: the actual value stored as text
+
+Supported input shapes (auto-detected by folder name during recursive discovery):
+
+- `raw_data/companyfacts/*.json`
+  - walks `facts -> namespace -> metric -> units -> [points]`
+  - maps each point with an `end` to `(entity, end-date, namespace.metric, unit, val)`
+
+- `raw_data/submissions/*.json`
+  - supports both the "full" shape with `filings.recent` and the flattened recent shape
+  - maps `submissions.recent.<field>[i]` to `(entity, filingDate[i] or reportDate[i], field, NA, value)`
+
+Database / correctness notes:
+
+- Missing `Entity`, `Unit`, `ValueName`, and `DateEntry` rows are created on demand.
+- Daily values are inserted using SQLite `INSERT OR IGNORE` to safely skip duplicates
+  under the `daily_values` uniqueness constraint.
+- Files that cannot be processed are *not* silently skipped; reasons and samples are
+  logged to `populate_daily_values.log`.
+
+If you change this file, run the test suite to validate parsing and DB behavior:
+
+    pytest -q
+"""
+
 import sys
 import os
 
@@ -6,6 +40,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import json  # noqa: E402
 import logging  # noqa: E402
 from datetime import datetime  # noqa: E402
+from utils.time_utils import utcnow  # noqa: E402
 from collections import Counter, defaultdict  # noqa: E402
 from time import perf_counter  # noqa: E402
 from sqlalchemy import create_engine  # noqa: E402
@@ -39,9 +74,9 @@ if not logger.handlers:
 
 # Previously we populated from raw_data/submissions.
 # Companyfacts is where the numeric facts/metrics live.
-COMPANYFACTS_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "raw_data", "companyfacts"
-)
+RAW_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "raw_data")
+COMPANYFACTS_DIR = os.path.join(RAW_DATA_DIR, "companyfacts")
+SUBMISSIONS_DIR = os.path.join(RAW_DATA_DIR, "submissions")
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "sec.db")
 engine = create_engine(f"sqlite:///{DB_PATH}")
 Base.metadata.create_all(engine)
@@ -87,6 +122,11 @@ def _insert_daily_value_ignore(
 
 
 def get_or_create_entity(cik, company_name: str | None = None):
+    """Get an `Entity` by CIK or create it.
+
+    If `company_name` is provided and the existing entity has no name, it will be
+    backfilled.
+    """
     with session.no_autoflush:
         entity = session.query(Entity).filter_by(cik=cik).first()
     if not entity:
@@ -104,6 +144,10 @@ def get_or_create_entity(cik, company_name: str | None = None):
 
 
 def get_or_create_unit(name: str | None):
+    """Get a `Unit` by name or create it.
+
+    Empty/None names are normalized to the sentinel unit name `NA`.
+    """
     unit_name = (name or "NA").strip() or "NA"
     with session.no_autoflush:
         unit = session.query(Unit).filter_by(name=unit_name).first()
@@ -115,6 +159,11 @@ def get_or_create_unit(name: str | None):
 
 
 def get_or_create_value_name(name, unit_id: int | None = None):
+    """Get a `ValueName` by SEC concept name or create it.
+
+    If `unit_id` is provided and the existing ValueName has no unit set, it will be
+    backfilled.
+    """
     with session.no_autoflush:
         value_name = session.query(ValueName).filter_by(name=name).first()
     if not value_name:
@@ -122,7 +171,7 @@ def get_or_create_value_name(name, unit_id: int | None = None):
             name=name,
             unit_id=unit_id,
             source="sec",
-            added_on=datetime.utcnow(),
+            added_on=utcnow(),
         )
         session.add(value_name)
         session.commit()
@@ -137,6 +186,10 @@ def get_or_create_value_name(name, unit_id: int | None = None):
 
 
 def get_or_create_date_entry(date_str):
+    """Get a `DateEntry` by `YYYY-MM-DD` string or create it.
+
+    Returns None if the date string cannot be parsed.
+    """
     try:
         date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
     except Exception as e:
@@ -152,7 +205,10 @@ def get_or_create_date_entry(date_str):
 
 
 def delete_all_daily_values():
-    """One-time callable: Delete all data from the DailyValue table."""
+    """Delete all rows from `daily_values`.
+
+    Intended as a one-off helper during development/troubleshooting.
+    """
     try:
         num_deleted = session.query(DailyValue).delete()
         session.commit()
@@ -167,10 +223,291 @@ def delete_all_daily_values():
         logger.error(f"Error deleting DailyValue data: {e}", exc_info=True)
 
 
+def _is_nonempty_dict(v) -> bool:
+    """True if `v` is a dict and not empty."""
+    return isinstance(v, dict) and bool(v)
+
+
+def _is_list(v) -> bool:
+    """True if `v` is a list."""
+    return isinstance(v, list)
+
+
+def _log_unprocessed(
+    *,
+    source: str,
+    filename: str,
+    reason: str,
+    details: str,
+    skip_reasons: Counter,
+    skip_reason_samples: dict[str, list[str]],
+    error_files: list[str],
+) -> None:
+    """Log an unprocessed file with a structured reason.
+
+    Also updates counters and keeps a small sample list per reason.
+    """
+    skip_reasons[reason] += 1
+    if len(skip_reason_samples[reason]) < 10:
+        skip_reason_samples[reason].append(filename)
+    logger.warning(
+        "Unprocessed file [%s] %s: %s | %s", source, filename, reason, details
+    )
+    error_files.append(f"{source}:{filename}")
+
+
+def _normalize_cik(raw) -> str | None:
+    """Normalize a CIK into 10-digit, zero-padded form.
+
+    Accepts ints, numeric strings, or strings like `CIK0000123456`.
+    """
+    if raw is None:
+        return None
+    try:
+        return str(int(raw)).zfill(10)
+    except Exception:
+        s = str(raw).strip()
+        if not s:
+            return None
+        # keep digits only if someone passed 'CIK0000...'
+        if s.startswith("CIK"):
+            s = s[3:]
+        digits = "".join(ch for ch in s if ch.isdigit())
+        return digits.zfill(10) if digits else None
+
+
+def infer_cik_from_filename(name: str) -> str | None:
+    """Infer a CIK from a filename like `CIK0000123456.json` (digits only)."""
+    base = os.path.basename(name)
+    if not base.startswith("CIK"):
+        return None
+    digits = []
+    for ch in base[3:]:
+        if ch.isdigit():
+            digits.append(ch)
+        else:
+            break
+    return "".join(digits) or None
+
+
+def extract_entity_identity(data: dict, filename: str) -> tuple[str | None, str | None]:
+    """Extract (cik10, company_name) from payload, falling back to filename."""
+    cik = _normalize_cik(data.get("cik"))
+    if not cik:
+        inferred = infer_cik_from_filename(filename)
+        cik = _normalize_cik(inferred)
+    company_name = data.get("entityName") or data.get("name") or data.get("companyName")
+    company_name = company_name.strip() if isinstance(company_name, str) else None
+    return cik, company_name
+
+
+def _resolve_recent_payload(data: dict):
+    """Resolve the submissions "recent" payload and schema name.
+
+    Returns (schema_name, recent_dict_or_none).
+    """
+    if not isinstance(data, dict):
+        return "non_dict", None
+
+    filings = data.get("filings")
+    if isinstance(filings, dict):
+        recent = filings.get("recent")
+        if isinstance(recent, dict):
+            return "full_submissions", recent
+
+    if (
+        "filings" not in data
+        and isinstance(data.get("filingDate"), list)
+        and ("accessionNumber" in data or "form" in data)
+    ):
+        return "flattened_recent", data
+
+    return "unknown", None
+
+
+def iter_companyfacts_points(facts: dict):
+    """Iterate companyfacts points.
+
+    Yields `(value_name, unit_name, end_date, raw_val)`.
+    """
+    if not isinstance(facts, dict):
+        return
+    for namespace, metrics in facts.items():
+        if not isinstance(metrics, dict):
+            continue
+        for metric, metric_obj in metrics.items():
+            if not isinstance(metric_obj, dict):
+                continue
+            units = metric_obj.get("units")
+            if not isinstance(units, dict) or not units:
+                continue
+            for unit, points in units.items():
+                if not isinstance(points, list):
+                    continue
+                value_name = f"{namespace}.{metric}"
+                for p in points:
+                    if not isinstance(p, dict):
+                        continue
+                    end = p.get("end")
+                    if not end:
+                        continue
+                    val = p.get("val")
+                    yield value_name, unit, end, val
+
+
+def iter_submissions_recent_points(recent: dict):
+    """Iterate submissions `recent` arrays.
+
+    Yields `(value_name, unit_name, date_str_or_none, raw_val)`.
+    Values without a corresponding `filingDate`/`reportDate` yield `date_str_or_none=None`.
+    """
+    if not isinstance(recent, dict) or not recent:
+        return
+
+    filing_dates = (
+        recent.get("filingDate") if isinstance(recent.get("filingDate"), list) else []
+    )
+    report_dates = (
+        recent.get("reportDate") if isinstance(recent.get("reportDate"), list) else []
+    )
+
+    def _date_for_index(i: int) -> str | None:
+        if i < len(filing_dates) and filing_dates[i]:
+            return filing_dates[i]
+        if i < len(report_dates) and report_dates[i]:
+            return report_dates[i]
+        return None
+
+    for key, arr in recent.items():
+        if not isinstance(arr, list):
+            continue
+        if key in ("filingDate", "reportDate"):
+            continue
+
+        value_name = f"submissions.recent.{key}"
+        for i, raw_val in enumerate(arr):
+            date_str = _date_for_index(i)
+            if not date_str:
+                yield value_name, "NA", None, raw_val
+            else:
+                yield value_name, "NA", date_str, raw_val
+
+
+def process_companyfacts_file(
+    *,
+    data: dict,
+    source: str,
+    filename: str,
+    entity_id: int,
+    get_unit_id_cached,
+    get_value_name_id_cached,
+    get_date_id_cached,
+) -> tuple[int, int]:
+    """Process a single companyfacts JSON payload.
+
+    Returns `(planned_inserts, duplicates_skipped)`.
+    """
+    facts = data.get("facts")
+    if not _is_nonempty_dict(facts):
+        return 0, 0
+
+    inserts_planned = 0
+    duplicates = 0
+    for value_name, unit_name, end_date, raw_val in iter_companyfacts_points(facts):
+        date_id = get_date_id_cached(end_date)
+        if not date_id:
+            continue
+        unit_id = get_unit_id_cached(unit_name)
+        vn_id = get_value_name_id_cached(value_name, unit_id)
+        inserts_planned += 1
+        if not _insert_daily_value_ignore(
+            entity_id=entity_id,
+            date_id=date_id,
+            value_name_id=vn_id,
+            value=_safe_str(raw_val),
+        ):
+            duplicates += 1
+    return inserts_planned, duplicates
+
+
+def process_submissions_file(
+    *,
+    data: dict,
+    source: str,
+    filename: str,
+    entity_id: int,
+    get_unit_id_cached,
+    get_value_name_id_cached,
+    get_date_id_cached,
+) -> tuple[str, int, int, str | None]:
+    """Process a single submissions JSON payload.
+
+    Returns `(schema, planned_inserts, duplicates_skipped, unprocessed_reason_or_none)`.
+    """
+    schema, recent = _resolve_recent_payload(data)
+    if not _is_nonempty_dict(recent):
+        return schema, 0, 0, "unknown_submissions_schema"
+
+    filing_dates = (
+        recent.get("filingDate") if isinstance(recent.get("filingDate"), list) else []
+    )
+    report_dates = (
+        recent.get("reportDate") if isinstance(recent.get("reportDate"), list) else []
+    )
+    if not filing_dates and not report_dates:
+        return schema, 0, 0, "submissions_missing_dates"
+
+    inserts_planned = 0
+    duplicates = 0
+
+    na_unit_id = get_unit_id_cached("NA")
+
+    for value_name, unit_name, date_str, raw_val in iter_submissions_recent_points(
+        recent
+    ):
+        if not date_str:
+            # keep as unprocessed detail; don't insert without a date_id
+            continue
+        date_id = get_date_id_cached(date_str)
+        if not date_id:
+            continue
+        vn_id = get_value_name_id_cached(value_name, na_unit_id)
+        inserts_planned += 1
+        if not _insert_daily_value_ignore(
+            entity_id=entity_id,
+            date_id=date_id,
+            value_name_id=vn_id,
+            value=_safe_str(raw_val),
+        ):
+            duplicates += 1
+
+    return schema, inserts_planned, duplicates, None
+
+
+def discover_json_files(root_dir: str):
+    """Recursively find JSON files under `root_dir`.
+
+    Returns a sorted list of `(source_folder_name, absolute_path, filename)` tuples.
+    """
+    found: list[tuple[str, str, str]] = []
+    for dirpath, _, filenames in os.walk(root_dir):
+        for fn in filenames:
+            if not fn.lower().endswith(".json"):
+                continue
+            src = os.path.basename(dirpath) or "raw_data"
+            full_path = os.path.join(dirpath, fn)
+            found.append((src, full_path, fn))
+    found.sort(key=lambda t: (t[0], t[2]))
+    return found
+
+
 def main():
-    files = sorted([f for f in os.listdir(COMPANYFACTS_DIR) if f.endswith(".json")])
+    """Entry point: discover JSON files, process them, and write summary logs."""
+    # Discover all JSON files under raw_data recursively.
+    files = discover_json_files(RAW_DATA_DIR)
+
     total_files = len(files)
-    error_files = []
+    error_files: list[str] = []
 
     total_successful_inserts = 0
     total_duplicates = 0
@@ -230,139 +567,122 @@ def main():
         date_cache[date_str] = date_entry.id
         return date_entry.id
 
-    def infer_cik_from_filename(name: str) -> str | None:
-        base = os.path.basename(name)
-        if not base.startswith("CIK"):
-            return None
-        digits = []
-        for ch in base[3:]:
-            if ch.isdigit():
-                digits.append(ch)
-            else:
-                break
-        cik = "".join(digits)
-        return cik or None
-
-    def iter_fact_points(facts: dict):
-        """Yield flattened fact points from a companyfacts payload.
-
-        Produces tuples:
-          (value_name, unit_name, end_date_str, raw_value)
-
-        Value name reflects parent structures (namespace + metric) only.
-        Unit is stored separately in `units` and referenced by `value_names.unit_id`.
-        """
-        if not isinstance(facts, dict):
-            return
-        for namespace, metrics in facts.items():
-            if not isinstance(metrics, dict):
-                continue
-            for metric, metric_obj in metrics.items():
-                if not isinstance(metric_obj, dict):
-                    continue
-                units = metric_obj.get("units")
-                if not isinstance(units, dict) or not units:
-                    # still emit a placeholder metric so we can log it as unprocessed
-                    continue
-                for unit, points in units.items():
-                    if not isinstance(points, list):
-                        continue
-                    value_name = f"{namespace}.{metric}"
-                    for p in points:
-                        if not isinstance(p, dict):
-                            continue
-                        end = p.get("end")
-                        if not end:
-                            continue
-                        val = p.get("val")
-                        yield value_name, unit, end, val
-
     # Ensure NA unit exists.
     get_unit_id_cached("NA")
 
-    for idx, filename in enumerate(files, 1):
+    for idx, (source, file_path, filename) in enumerate(files, 1):
         t0 = perf_counter()
         if idx % 100 == 0:
             logger.info("Progress: %s/%s files", idx, total_files)
 
-        print(f"Processing file {idx}/{total_files}: {filename}")
-        logger.info(f"Processing file {idx}/{total_files}: {filename}")
-
-        file_path = os.path.join(COMPANYFACTS_DIR, filename)
-
-        inserts_planned = 0
-        duplicates = 0
+        rel_path = os.path.relpath(file_path, RAW_DATA_DIR)
+        print(f"Processing file {idx}/{total_files}: [{source}] {rel_path}")
+        logger.info(f"Processing file {idx}/{total_files}: [{source}] {rel_path}")
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
             if not isinstance(data, dict):
-                skip_reasons["non_dict_json"] += 1
-                _sample("non_dict_json", filename)
+                _log_unprocessed(
+                    source=source,
+                    filename=rel_path,
+                    reason="non_dict_json",
+                    details=f"type={type(data).__name__}",
+                    skip_reasons=skip_reasons,
+                    skip_reason_samples=skip_reason_samples,
+                    error_files=error_files,
+                )
                 continue
 
-            cik = data.get("cik")
+            if not isinstance(data, dict):
+                _log_unprocessed(
+                    source=source,
+                    filename=rel_path,
+                    reason="non_dict_json",
+                    details=f"type={type(data).__name__}",
+                    skip_reasons=skip_reasons,
+                    skip_reason_samples=skip_reason_samples,
+                    error_files=error_files,
+                )
+                continue
+
+            cik, company_name = extract_entity_identity(data, filename)
             if not cik:
-                cik = infer_cik_from_filename(filename)
-                if cik:
-                    skip_reasons["missing_cik_inferred_from_filename"] += 1
-                else:
-                    skip_reasons["missing_cik_and_cannot_infer"] += 1
-                    _sample("missing_cik_and_cannot_infer", filename)
-                    error_files.append(filename)
-                    continue
+                _log_unprocessed(
+                    source=source,
+                    filename=rel_path,
+                    reason="missing_cik_and_cannot_infer",
+                    details=f"top_keys={sorted(list(data.keys()))[:30]}",
+                    skip_reasons=skip_reasons,
+                    skip_reason_samples=skip_reason_samples,
+                    error_files=error_files,
+                )
+                continue
 
-            # normalize CIK (SEC often stores as int in JSON)
-            try:
-                cik = str(int(cik)).zfill(10)
-            except Exception:
-                cik = str(cik).zfill(10)
-
-            company_name = data.get("entityName") or None
             entity_id = get_entity_id_cached(cik, company_name=company_name)
 
-            facts = data.get("facts")
-            if not isinstance(facts, dict) or not facts:
-                # Do not silently skip: log full context for investigation.
-                skip_reasons["missing_facts"] += 1
-                _sample("missing_facts", filename)
-                logger.warning(
-                    "Unprocessed file %s: missing/empty facts. top_keys=%s cik=%s entityName=%s",
-                    filename,
-                    sorted(list(data.keys())) if isinstance(data, dict) else None,
-                    cik,
-                    company_name,
-                )
-                error_files.append(filename)
-                continue
+            inserts_planned = 0
+            duplicates = 0
 
-            # insert all points for this file in one transaction
-            for value_name, unit_name, end_date, raw_val in iter_fact_points(facts):
-                date_id = get_date_id_cached(end_date)
-                if not date_id:
-                    skip_reasons["invalid_date_format"] += 1
-                    logger.warning(
-                        "Invalid date in file %s: value_name=%s unit=%s end=%s",
-                        filename,
-                        value_name,
-                        unit_name,
-                        end_date,
+            if source == "companyfacts":
+                if not _is_nonempty_dict(data.get("facts")):
+                    _log_unprocessed(
+                        source=source,
+                        filename=rel_path,
+                        reason="missing_facts",
+                        details=f"cik={cik} entityName={company_name} top_keys={sorted(list(data.keys()))[:30]}",
+                        skip_reasons=skip_reasons,
+                        skip_reason_samples=skip_reason_samples,
+                        error_files=error_files,
                     )
                     continue
 
-                unit_id = get_unit_id_cached(unit_name)
-                vn_id = get_value_name_id_cached(value_name, unit_id)
-
-                inserts_planned += 1
-                inserted_ok = _insert_daily_value_ignore(
+                inserts_planned, duplicates = process_companyfacts_file(
+                    data=data,
+                    source=source,
+                    filename=rel_path,
                     entity_id=entity_id,
-                    date_id=date_id,
-                    value_name_id=vn_id,
-                    value=_safe_str(raw_val),
+                    get_unit_id_cached=get_unit_id_cached,
+                    get_value_name_id_cached=get_value_name_id_cached,
+                    get_date_id_cached=get_date_id_cached,
                 )
-                if not inserted_ok:
-                    duplicates += 1
+
+            elif source == "submissions":
+                schema, inserts_planned, duplicates, unprocessed_reason = (
+                    process_submissions_file(
+                        data=data,
+                        source=source,
+                        filename=rel_path,
+                        entity_id=entity_id,
+                        get_unit_id_cached=get_unit_id_cached,
+                        get_value_name_id_cached=get_value_name_id_cached,
+                        get_date_id_cached=get_date_id_cached,
+                    )
+                )
+                if unprocessed_reason:
+                    _log_unprocessed(
+                        source=source,
+                        filename=rel_path,
+                        reason=unprocessed_reason,
+                        details=f"schema={schema} keys={sorted(list(data.keys()))[:30]}",
+                        skip_reasons=skip_reasons,
+                        skip_reason_samples=skip_reason_samples,
+                        error_files=error_files,
+                    )
+                    continue
+
+            else:
+                _log_unprocessed(
+                    source=source,
+                    filename=rel_path,
+                    reason="unknown_source",
+                    details=f"No handler for source folder '{source}'",
+                    skip_reasons=skip_reasons,
+                    skip_reason_samples=skip_reason_samples,
+                    error_files=error_files,
+                )
+                continue
 
             # Commit once per file
             try:
@@ -370,13 +690,15 @@ def main():
             except IntegrityError:
                 session.rollback()
                 error_reasons["IntegrityError"] += 1
+                error_files.append(f"{source}:{rel_path}")
+                continue
             except Exception as e:
                 session.rollback()
                 error_reasons[type(e).__name__] += 1
                 logger.error(
-                    "Commit failed for file %s: %s", filename, e, exc_info=True
+                    "Commit failed for file %s: %s", rel_path, e, exc_info=True
                 )
-                error_files.append(filename)
+                error_files.append(f"{source}:{rel_path}")
                 continue
 
             inserted = max(inserts_planned - duplicates, 0)
@@ -388,19 +710,19 @@ def main():
             totals["duplicates"] += duplicates
 
             logger.info(
-                "Completed file %s: inserted=%s dup=%s elapsed=%.2fs",
-                filename,
+                "Completed file %s source=%s: inserted=%s dup=%s elapsed=%.2fs",
+                rel_path,
+                source,
                 inserted,
                 duplicates,
                 perf_counter() - t0,
             )
 
         except Exception as e:
-            # Ensure the session is usable for the next file
             session.rollback()
             error_reasons[type(e).__name__] += 1
-            logger.error(f"Error processing file {filename}: {e}", exc_info=True)
-            error_files.append(filename)
+            logger.error(f"Error processing file {rel_path}: {e}", exc_info=True)
+            error_files.append(f"{source}:{rel_path}")
 
     session.close()
 

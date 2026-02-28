@@ -1,6 +1,6 @@
 import sqlite3
 import os
-from datetime import datetime
+from utils.time_utils import utcnow
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "sec.db")
 
@@ -29,7 +29,7 @@ c.execute(
 INSERT INTO value_names (id, name, source, added_on, valid_until)
 SELECT id, name, 1, ?, NULL FROM value_names_old
 """,
-    (datetime.utcnow().isoformat(),),
+    (utcnow().isoformat(),),
 )
 
 # 4. Drop old table

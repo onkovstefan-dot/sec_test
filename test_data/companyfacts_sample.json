@@ -1,0 +1,23 @@
+{
+    "cik": 1750,
+    "entityName": "AAR CORP.",
+    "facts": {
+        "us-gaap": {
+            "Assets": {
+                "label": "Assets",
+                "units": {
+                    "USD": [
+                        {
+                            "end": "2010-05-31",
+                            "val": 1501042000,
+                            "fy": 2011,
+                            "fp": "Q1",
+                            "form": "10-Q",
+                            "filed": "2010-09-23"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

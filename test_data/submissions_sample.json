@@ -1,0 +1,23 @@
+{
+    "cik": "0000000003",
+    "name": "DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW YORK SER 33",
+    "filings": {
+        "recent": {
+            "filingDate": [
+                "2024-01-02"
+            ],
+            "reportDate": [
+                "2023-12-31"
+            ],
+            "form": [
+                "N-PORT"
+            ],
+            "accessionNumber": [
+                "0000000003-24-000001"
+            ],
+            "primaryDocument": [
+                "primary.html"
+            ]
+        }
+    }
+}
