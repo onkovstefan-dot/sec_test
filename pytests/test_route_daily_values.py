@@ -26,8 +26,12 @@ def client(tmp_path, monkeypatch):
 
     date = DateEntry(date=dt.date(2020, 1, 1))
     unit = Unit(name="USD")
-    vn = ValueName(name="Assets")
+    vn = ValueName(name="Assets", unit_id=None)  # Will be set via flush
     session.add_all([date, unit, vn])
+    session.flush()
+
+    # Set unit_id on ValueName after flush
+    vn.unit_id = unit.id
     session.flush()
 
     session.add(
@@ -35,7 +39,6 @@ def client(tmp_path, monkeypatch):
             entity_id=entity.id,
             date_id=date.id,
             value_name_id=vn.id,
-            unit_id=unit.id,
             value=123,
         )
     )

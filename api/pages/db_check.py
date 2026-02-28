@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, render_template
 
-from db import SessionLocal
+import db
 from sqlalchemy import inspect, text
 
 
@@ -24,7 +24,7 @@ def db_check():
     if limit > 500:
         limit = 500
 
-    session = SessionLocal()
+    session = db.SessionLocal()
     try:
         # Discover tables from SQLAlchemy engine
         inspector = inspect(session.bind)

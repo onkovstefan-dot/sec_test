@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, render_template
 
-from db import SessionLocal
+import db
 from models.dates import DateEntry
 from models.entities import Entity
 from models.value_names import ValueName
@@ -27,7 +27,7 @@ def daily_values_page():
     ]
     unit_filter = (request.args.get("unit") or "").strip()
 
-    session = SessionLocal()
+    session = db.SessionLocal()
     try:
         if not entity_id:
             return (
