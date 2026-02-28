@@ -6,6 +6,9 @@ from pathlib import Path
 
 import pytest
 
+from models.daily_values import DailyValue
+from models.units import Unit
+from models.value_names import ValueName
 from pytests.common import create_empty_sqlite_db
 
 
@@ -140,7 +143,6 @@ def test_process_companyfacts_file_inserts_daily_value(
     assert dups == 0
 
     session.commit()
-    from models.daily_values import DailyValue
 
     assert session.query(DailyValue).count() == 1
 
@@ -223,10 +225,6 @@ def test_main_end_to_end_discovers_and_processes_two_files(tmp_db_session, monke
     monkeypatch.setattr(m, "RAW_DATA_DIR", str(root), raising=False)
 
     m.main()
-
-    from models.daily_values import DailyValue
-    from models.value_names import ValueName
-    from models.units import Unit
 
     # Assets + submissions.recent.form + submissions.recent.accessionNumber + submissions.recent.primaryDocument
     assert session.query(DailyValue).count() >= 2

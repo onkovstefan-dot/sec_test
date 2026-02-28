@@ -14,6 +14,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+import db as db_module
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -87,11 +88,7 @@ def patch_app_db(monkeypatch, engine: Engine) -> sessionmaker:
     Returns the new SessionLocal (sessionmaker).
     """
 
-    from sqlalchemy.orm import sessionmaker as _sessionmaker
-
-    import db as db_module
-
-    SessionLocal = _sessionmaker(bind=engine, expire_on_commit=False)
+    SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
     monkeypatch.setattr(db_module, "engine", engine, raising=True)
     monkeypatch.setattr(db_module, "SessionLocal", SessionLocal, raising=True)
     return SessionLocal

@@ -1,24 +1,26 @@
 import sys
 import os
 
+# Allow running as standalone script
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-import json  # noqa: E402
-from datetime import date as _date  # noqa: E402
-from sqlalchemy import create_engine  # noqa: E402
-from sqlalchemy.orm import sessionmaker  # noqa: E402
-from sqlalchemy.dialects.sqlite import insert as sqlite_insert  # noqa: E402
+import json
+from datetime import date as _date
 
-from models import Base  # noqa: E402
-from models.entities import Entity  # noqa: E402
-from models.dates import DateEntry  # noqa: E402
-from models.units import Unit  # noqa: E402
-from models.value_names import ValueName  # noqa: E402
-from models.entity_metadata import EntityMetadata  # noqa: E402
+from sqlalchemy import create_engine
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.orm import sessionmaker
+
+from models import Base
+from models.dates import DateEntry
+from models.entities import Entity
+from models.entity_metadata import EntityMetadata
+from models.units import Unit
+from models.value_names import ValueName
 
 # Ensure all tables are registered on Base.metadata
-import models.daily_values  # noqa: F401,E402
-import models.file_processing  # noqa: F401,E402
+import models.daily_values  # noqa: F401
+import models.file_processing  # noqa: F401
 
 RAW_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "raw_data")
 SUBMISSIONS_DIR = os.path.join(RAW_DATA_DIR, "submissions")

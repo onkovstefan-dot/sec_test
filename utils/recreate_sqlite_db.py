@@ -22,12 +22,13 @@ from models import Base
 
 # Ensure all model modules are imported so they are registered with Base.metadata
 # (Otherwise some tables may not be included in create_all/drop_all)
-import models.daily_values  # noqa: F401,E402
-import models.dates  # noqa: F401,E402
-import models.entities  # noqa: F401,E402
-import models.file_processing  # noqa: F401,E402
-import models.units  # noqa: F401,E402
-import models.value_names  # noqa: F401,E402
+import models.daily_values  # noqa: F401
+import models.dates  # noqa: F401
+import models.entities  # noqa: F401
+import models.entity_metadata  # noqa: F401
+import models.file_processing  # noqa: F401
+import models.units  # noqa: F401
+import models.value_names  # noqa: F401
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "sec.db")
 

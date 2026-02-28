@@ -5,23 +5,20 @@ import time
 # Allow running this module directly (or via certain runners) without package context.
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from flask import Blueprint, jsonify, request, render_template, redirect, url_for
-
-# Job management extracted in Milestone 3
-from api.jobs.manager import (
-    populate_daily_values_job,
-    recreate_sqlite_db_job,
-    read_last_log_line,
-)
-
-from models.entities import Entity
-from models.daily_values import DailyValue
-from models.dates import DateEntry
-from models.value_names import ValueName
-from models.units import Unit
-from db import SessionLocal
+from flask import Blueprint, jsonify, redirect, render_template, request, url_for
 from sqlalchemy import inspect
 
+from api.jobs.manager import (
+    populate_daily_values_job,
+    read_last_log_line,
+    recreate_sqlite_db_job,
+)
+from db import SessionLocal
+from models.daily_values import DailyValue
+from models.dates import DateEntry
+from models.entities import Entity
+from models.units import Unit
+from models.value_names import ValueName
 from utils.value_parsing import parse_primitive
 
 api_bp = Blueprint("api", __name__)

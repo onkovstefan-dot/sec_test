@@ -56,9 +56,12 @@ def create_app() -> Flask:
     return app
 
 
-app = create_app()
+# NOTE: Do not instantiate the Flask app at import time.
+# Tests patch the DB engine/sessionmaker before calling create_app().
+app: Flask | None = None
 
 
 if __name__ == "__main__":
+    app = create_app()
     get_logger(__name__).info("Starting Flask app")
     app.run(debug=True, use_reloader=False)

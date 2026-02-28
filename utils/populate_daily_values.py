@@ -35,30 +35,33 @@ If you change this file, run the test suite to validate parsing and DB behavior:
 import sys
 import os
 
+# Allow running as standalone script
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-import json  # noqa: E402
-import logging  # noqa: E402
-from datetime import datetime  # noqa: E402
-from utils.time_utils import utcnow, parse_ymd_date  # noqa: E402
-from collections import Counter, defaultdict  # noqa: E402
-from time import perf_counter  # noqa: E402
-import threading  # noqa: E402
-from contextlib import contextmanager  # noqa: E402
-from functools import wraps  # noqa: E402
-from sqlalchemy import create_engine, func  # noqa: E402
-from sqlalchemy.orm import sessionmaker  # noqa: E402
-from sqlalchemy.exc import IntegrityError  # noqa: E402
-from sqlalchemy.dialects.sqlite import insert as sqlite_insert  # noqa: E402
-from models import Base  # noqa: E402
-from models.entities import Entity  # noqa: E402
-from models.value_names import ValueName  # noqa: E402
-from models.units import Unit  # noqa: E402
-from models.dates import DateEntry  # noqa: E402
-from models.daily_values import DailyValue  # noqa: E402
-from models.file_processing import FileProcessing  # noqa: E402
-from models.entity_metadata import EntityMetadata  # noqa: E402
-from logging_utils import get_logger  # noqa: E402
+import json
+import logging
+import threading
+from collections import Counter, defaultdict
+from contextlib import contextmanager
+from datetime import datetime
+from functools import wraps
+from time import perf_counter
+
+from sqlalchemy import create_engine, func
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import sessionmaker
+
+from logging_utils import get_logger
+from models import Base
+from models.daily_values import DailyValue
+from models.dates import DateEntry
+from models.entities import Entity
+from models.entity_metadata import EntityMetadata
+from models.file_processing import FileProcessing
+from models.units import Unit
+from models.value_names import ValueName
+from utils.time_utils import parse_ymd_date, utcnow
 
 
 def _ts_now() -> str:

@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 import pytest
 
 from app import create_app
-from pytests.common import create_empty_sqlite_db
+from models.daily_values import DailyValue
+from models.dates import DateEntry
+from models.entities import Entity
+from models.units import Unit
+from models.value_names import ValueName
+from pytests.common import create_empty_sqlite_db, patch_app_db
 
 
 @pytest.fixture()
@@ -14,17 +20,7 @@ def client(tmp_path, monkeypatch):
     session, engine = create_empty_sqlite_db(tmp_path / "test_sec.db")
 
     # IMPORTANT: ensure the Flask app uses this temp DB (CI doesn't have data/sec.db).
-    from pytests.common import patch_app_db
-
     patch_app_db(monkeypatch, engine)
-
-    from datetime import date
-
-    from models.entities import Entity
-    from models.dates import DateEntry
-    from models.units import Unit
-    from models.value_names import ValueName
-    from models.daily_values import DailyValue
 
     e = Entity(cik="0000000003")
     session.add(e)

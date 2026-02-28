@@ -5,6 +5,9 @@ import traceback
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
+from db import Base, engine
+from utils import populate_daily_values, recreate_sqlite_db
+
 
 def read_last_log_line(log_path: str, *, max_bytes: int = 64 * 1024) -> str:
     """Return last non-empty line from a log file (best-effort)."""
@@ -72,12 +75,8 @@ class PopulateDailyValuesJob:
 
         def _runner() -> None:
             try:
-                # Lazily ensure schema exists before running the job.
-                from db import Base, engine
-
+                # Ensure schema exists before running the job.
                 Base.metadata.create_all(bind=engine)
-
-                from utils import populate_daily_values
 
                 # cooperative stop: only prevents new run from continuing at start
                 with self._lock:
@@ -128,8 +127,6 @@ class RecreateSqliteDbJob:
 
         def _runner() -> None:
             try:
-                from utils import recreate_sqlite_db
-
                 recreate_sqlite_db.main()
             except Exception:
                 with self._lock:

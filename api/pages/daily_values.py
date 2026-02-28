@@ -1,7 +1,9 @@
 from flask import Blueprint, jsonify, request, render_template
 
 from db import SessionLocal
+from models.dates import DateEntry
 from models.entities import Entity
+from models.value_names import ValueName
 from utils.value_parsing import parse_primitive
 
 from api.services.daily_values_service import (
@@ -56,9 +58,6 @@ def daily_values_page():
         )
 
         # ordering matches prior behavior
-        from models.dates import DateEntry
-        from models.value_names import ValueName
-
         rows = query.order_by(DateEntry.date, ValueName.name).all()
 
         serialized_rows = serialize_daily_values_rows(

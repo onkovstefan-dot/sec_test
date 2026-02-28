@@ -1,9 +1,11 @@
 """SQLAlchemy models package.
 
 Important: This project uses a single declarative Base defined in `db.py`.
-Import `Base` from here in all model modules:
+Import `Base` from this package in all model modules.
 
-    from models import Base
+Example:
+
+    Base.metadata.create_all(...)
 
 This keeps `Base.metadata` consistent across the app.
 """

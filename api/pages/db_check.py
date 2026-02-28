@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, render_template
 
 from db import SessionLocal
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 
 
 db_check_bp = Blueprint("db_check", __name__)
@@ -38,8 +38,6 @@ def db_check():
 
         if selected_table:
             try:
-                from sqlalchemy import text
-
                 columns = [c["name"] for c in inspector.get_columns(selected_table)]
                 result = session.execute(
                     text(f'SELECT * FROM "{selected_table}" LIMIT :limit'),

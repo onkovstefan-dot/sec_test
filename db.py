@@ -1,5 +1,5 @@
 from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 import os
 
 
@@ -27,8 +27,6 @@ engine = create_engine(
 )
 
 try:
-    from sqlalchemy import event
-
     event.listen(engine, "connect", _set_sqlite_pragmas)
 except Exception:
     pass

@@ -8,6 +8,7 @@ from api.jobs.manager import (
     recreate_sqlite_db_job,
     read_last_log_line,
 )
+from db import Base, engine
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -15,8 +16,6 @@ admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 @admin_bp.route("/init-db", methods=["POST"])
 def admin_init_db():
     """Create missing tables on demand."""
-    from db import Base, engine
-
     Base.metadata.create_all(bind=engine)
     return redirect(url_for("api.admin.admin_page"))
 

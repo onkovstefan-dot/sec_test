@@ -2,10 +2,15 @@ from __future__ import annotations
 
 import importlib
 import json
+from io import StringIO
 from pathlib import Path
 
 import pytest
 
+from models.dates import DateEntry
+from models.entities import Entity
+from models.units import Unit
+from models.value_names import ValueName
 from pytests.common import create_empty_sqlite_db
 
 
@@ -94,8 +99,6 @@ def test_process_submissions_inserts_entities_dates_units_and_value_names(
             def __enter__(self):
                 # json.load expects a file-like object; we fake it by returning a
                 # minimal object with read().
-                from io import StringIO
-
                 return StringIO(json.dumps(sample_submissions_dict))
 
             def __exit__(self, exc_type, exc, tb):
@@ -106,11 +109,6 @@ def test_process_submissions_inserts_entities_dates_units_and_value_names(
     monkeypatch.setattr(m, "open", fake_open, raising=False)
 
     counts = m._process_submissions(session)
-
-    from models.entities import Entity
-    from models.dates import DateEntry
-    from models.units import Unit
-    from models.value_names import ValueName
 
     assert counts["files"] == 1
     assert session.query(Entity).count() >= 1
@@ -136,8 +134,6 @@ def test_process_companyfacts_inserts_units_value_names_and_dates(
     def fake_open(_path: str, *args, **kwargs):
         class _CM:
             def __enter__(self):
-                from io import StringIO
-
                 return StringIO(json.dumps(sample_companyfacts_dict))
 
             def __exit__(self, exc_type, exc, tb):
@@ -148,10 +144,6 @@ def test_process_companyfacts_inserts_units_value_names_and_dates(
     monkeypatch.setattr(m, "open", fake_open, raising=False)
 
     counts = m._process_companyfacts(session)
-
-    from models.dates import DateEntry
-    from models.units import Unit
-    from models.value_names import ValueName
 
     assert counts["files"] == 1
     # companyfacts sample contains USD unit and at least one date/end.
