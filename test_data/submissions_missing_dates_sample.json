@@ -1,14 +1,14 @@
 {
-  "cik": "0000000013",
-  "name": "SAMPLE MISSING DATES INC.",
-  "filings": {
-    "recent": {
-      "accessionNumber": [
-        "0000000013-24-000001"
-      ],
-      "form": [
-        "10-K"
-      ]
+    "cik": "0000000013",
+    "name": "SAMPLE MISSING DATES INC.",
+    "filings": {
+        "recent": {
+            "accessionNumber": [
+                "0000000013-24-000001"
+            ],
+            "form": [
+                "10-K"
+            ]
+        }
     }
-  }
 }

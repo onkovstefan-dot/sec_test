@@ -40,7 +40,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import json  # noqa: E402
 import logging  # noqa: E402
 from datetime import datetime  # noqa: E402
-from utils.time_utils import utcnow  # noqa: E402
+from utils.time_utils import utcnow, parse_ymd_date  # noqa: E402
 from collections import Counter, defaultdict  # noqa: E402
 from time import perf_counter  # noqa: E402
 from sqlalchemy import create_engine  # noqa: E402
@@ -191,7 +191,7 @@ def get_or_create_date_entry(date_str):
     Returns None if the date string cannot be parsed.
     """
     try:
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+        date_obj = parse_ymd_date(date_str)
     except Exception as e:
         logger.error(f"Invalid date format: {date_str} - {e}")
         return None
