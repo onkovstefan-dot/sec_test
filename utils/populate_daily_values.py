@@ -16,7 +16,6 @@ from models.entities import Entity  # noqa: E402
 from models.value_names import ValueName  # noqa: E402
 from models.dates import DateEntry  # noqa: E402
 from models.daily_values import DailyValue  # noqa: E402
-from models.daily_values_text import DailyValueText  # noqa: E402
 
 # Setup logging
 # Keep a detailed log file for post-run investigation,
@@ -73,7 +72,7 @@ def get_or_create_entity(cik):
 def get_or_create_value_name(name):
     value_name = session.query(ValueName).filter_by(name=name).first()
     if not value_name:
-        value_name = ValueName(name=name, source=1, added_on=datetime.utcnow())
+        value_name = ValueName(name=name, source="sec", added_on=datetime.utcnow())
         session.add(value_name)
         session.commit()
     return value_name
@@ -115,9 +114,7 @@ def main():
     error_files = []
     # Overall counters (accurate based on attempted inserts + observed duplicates)
     total_successful_inserts_numeric = 0
-    total_successful_inserts_text = 0
     total_duplicates_numeric = 0
-    total_duplicates_text = 0
     print(f"Starting processing of {total_files} files.")
     logger.info(f"Starting processing of {total_files} files.")
 
@@ -191,11 +188,8 @@ def main():
         file_path = os.path.join(SUBMISSIONS_DIR, filename)
         # Per-file counters
         inserts_planned_numeric = 0
-        inserts_planned_text = 0
         successful_inserts_numeric = 0  # only used in row-wise fallback
-        successful_inserts_text = 0  # only used in row-wise fallback
         duplicates_numeric = 0
-        duplicates_text = 0
         non_numeric_count = 0
         try:
             with open(file_path, "r", encoding="utf-8") as f:
@@ -322,34 +316,16 @@ def main():
                         skip_reasons["invalid_date_format"] += 1
                         continue
 
-                    # Store value: numeric -> DailyValue, else -> DailyValueText
-                    try:
-                        value_float = float(val)
-                        is_numeric = True
-                    except (ValueError, TypeError):
-                        is_numeric = False
-                        non_numeric_count += 1
-
-                    if is_numeric:
-                        inserts_planned_numeric += 1
-                        session.add(
-                            DailyValue(
-                                entity_id=entity_id,
-                                value_name_id=vn_id,
-                                date_id=date_id,
-                                value=value_float,
-                            )
+                    # Store value as TEXT (single-table strategy)
+                    inserts_planned_numeric += 1
+                    session.add(
+                        DailyValue(
+                            entity_id=entity_id,
+                            value_name_id=vn_id,
+                            date_id=date_id,
+                            value=_safe_str(val),
                         )
-                    else:
-                        inserts_planned_text += 1
-                        session.add(
-                            DailyValueText(
-                                entity_id=entity_id,
-                                value_name_id=vn_id,
-                                date_id=date_id,
-                                value_text=_safe_str(val),
-                            )
-                        )
+                    )
 
                 # Batch flush per value_name to surface constraints earlier
                 # without committing per row.
@@ -358,12 +334,9 @@ def main():
                 except IntegrityError:
                     session.rollback()
                     # Duplicates are expected (same entity/value/date).
-                    # Count and continue.
                     skip_reasons["duplicate_unique_constraint"] += 1
                     error_reasons["IntegrityError"] += 1
-                    # Keep rolling: we don't know which record collided in the
-                    # batch, so fallback to row-wise insert. This is slower,
-                    # but only for problematic sets.
+                    # Fallback to row-wise insert for this value_name.
                     for idx_val, val in enumerate(values):
                         date_str = None
                         if value_name in ["filingDate", "reportDate"]:
@@ -381,44 +354,21 @@ def main():
                         date_id = get_date_id_cached(date_str)
                         if not date_id:
                             continue
+
                         try:
-                            value_float = float(val)
-                            is_numeric = True
-                        except (ValueError, TypeError):
-                            is_numeric = False
-                        if is_numeric:
-                            inserts_planned_numeric += 1
-                        else:
-                            inserts_planned_text += 1
-                        try:
-                            if is_numeric:
-                                session.add(
-                                    DailyValue(
-                                        entity_id=entity_id,
-                                        value_name_id=vn_id,
-                                        date_id=date_id,
-                                        value=value_float,
-                                    )
+                            session.add(
+                                DailyValue(
+                                    entity_id=entity_id,
+                                    value_name_id=vn_id,
+                                    date_id=date_id,
+                                    value=_safe_str(val),
                                 )
-                                session.flush()
-                                successful_inserts_numeric += 1
-                            else:
-                                session.add(
-                                    DailyValueText(
-                                        entity_id=entity_id,
-                                        value_name_id=vn_id,
-                                        date_id=date_id,
-                                        value_text=_safe_str(val),
-                                    )
-                                )
-                                session.flush()
-                                successful_inserts_text += 1
+                            )
+                            session.flush()
+                            successful_inserts_numeric += 1
                         except IntegrityError:
                             session.rollback()
-                            if is_numeric:
-                                duplicates_numeric += 1
-                            else:
-                                duplicates_text += 1
+                            duplicates_numeric += 1
                         except Exception as e2:
                             session.rollback()
                             error_reasons[type(e2).__name__] += 1
@@ -448,32 +398,21 @@ def main():
                 continue
 
             # Derive successful insert counts
-            # (planned - duplicates observed in row-wise fallback)
             file_inserted_numeric = max(inserts_planned_numeric - duplicates_numeric, 0)
-            file_inserted_text = max(inserts_planned_text - duplicates_text, 0)
 
             total_successful_inserts_numeric += file_inserted_numeric
-            total_successful_inserts_text += file_inserted_text
             total_duplicates_numeric += duplicates_numeric
-            total_duplicates_text += duplicates_text
 
             totals["files_processed"] += 1
-            totals["inserted_numeric"] += file_inserted_numeric
-            totals["inserted_text"] += file_inserted_text
-            totals["duplicates_numeric"] += duplicates_numeric
-            totals["duplicates_text"] += duplicates_text
+            totals["inserted"] += file_inserted_numeric
+            totals["duplicates"] += duplicates_numeric
 
             logger.info(
-                "Completed file %s schema=%s: inserted_num=%s"
-                " inserted_text=%s non_numeric=%s dup_num=%s"
-                " dup_text=%s elapsed=%.2fs",
+                "Completed file %s schema=%s: inserted=%s dup=%s elapsed=%.2fs",
                 filename,
                 schema,
                 file_inserted_numeric,
-                file_inserted_text,
-                non_numeric_count,
                 duplicates_numeric,
-                duplicates_text,
                 perf_counter() - t0,
             )
         except Exception as e:
@@ -491,15 +430,11 @@ def main():
         logger.info("Exception types summary: %s", dict(error_reasons.most_common()))
 
     # Summary logging
-    inserted_total = total_successful_inserts_numeric + total_successful_inserts_text
+    inserted_total = total_successful_inserts_numeric
     summary_msg = (
         f"Processing complete. Total files: {total_files}, "
-        f"Total successful inserts: {inserted_total} "
-        f"(numeric={total_successful_inserts_numeric},"
-        f" text={total_successful_inserts_text}), "
-        f"Total duplicates skipped"
-        f" (numeric={total_duplicates_numeric},"
-        f" text={total_duplicates_text}), "
+        f"Total successful inserts: {inserted_total}, "
+        f"Total duplicates skipped: {total_duplicates_numeric}, "
         f"Files with errors: {len(set(error_files))}"
     )
     print(summary_msg)

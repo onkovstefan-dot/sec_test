@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, Text
 from sqlalchemy import UniqueConstraint
 from models import Base
 
@@ -17,4 +17,6 @@ class DailyValue(Base):
     entity_id = Column(Integer, ForeignKey("entities.id"), nullable=False)
     date_id = Column(Integer, ForeignKey("dates.id"), nullable=False)
     value_name_id = Column(Integer, ForeignKey("value_names.id"), nullable=False)
-    value = Column(Float)
+
+    # Store as text to support any primitive value; parse at read-time in the app.
+    value = Column(Text)

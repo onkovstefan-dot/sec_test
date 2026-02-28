@@ -1,7 +1,11 @@
-from sqlalchemy.ext.declarative import declarative_base
+"""SQLAlchemy models package.
 
-Base = declarative_base()
+Important: This project uses a single declarative Base defined in `db.py`.
+Import `Base` from here in all model modules:
 
-# Place all SQLAlchemy models here, one class per file for clarity.
-# Example: from db import Base
-# class SubmissionsFlat(Base): ...
+    from models import Base
+
+This keeps `Base.metadata` consistent across the app.
+"""
+
+from db import Base  # re-export a single shared Base

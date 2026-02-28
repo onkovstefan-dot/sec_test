@@ -1,11 +1,12 @@
 from flask import Blueprint, jsonify, request, render_template_string, redirect, url_for
-from models.submissions_flat import SubmissionsFlat
 from models.entities import Entity
 from models.daily_values import DailyValue
 from models.dates import DateEntry
 from models.value_names import ValueName
 from db import SessionLocal
 from sqlalchemy import inspect
+
+from utils.value_parsing import parse_primitive
 
 api_bp = Blueprint("api", __name__)
 
@@ -148,7 +149,7 @@ def daily_values_page():
                     "cik": entity.cik,
                     "date": str(dv_date.date),
                     "value_name": vn.name,
-                    "value": dv.value,
+                    "value": parse_primitive(dv.value),
                 }
                 for dv, dv_date, vn in rows
             ]
@@ -156,7 +157,7 @@ def daily_values_page():
 
         table_rows_html = "".join(
             f"<tr><td>{str(dv_date.date)}</td><td>{vn.name}</td>"
-            f"<td class='num'>{dv.value}</td></tr>"
+            f"<td class='num'>{parse_primitive(dv.value)}</td></tr>"
             for dv, dv_date, vn in rows
         )
 
