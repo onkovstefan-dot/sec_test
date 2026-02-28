@@ -43,7 +43,7 @@ from datetime import datetime  # noqa: E402
 from utils.time_utils import utcnow, parse_ymd_date  # noqa: E402
 from collections import Counter, defaultdict  # noqa: E402
 from time import perf_counter  # noqa: E402
-from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy import create_engine, func  # noqa: E402
 from sqlalchemy.orm import sessionmaker  # noqa: E402
 from sqlalchemy.exc import IntegrityError  # noqa: E402
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert  # noqa: E402
@@ -99,6 +99,20 @@ def _safe_str(val, max_len: int = 4000) -> str:
     return s[:max_len]
 
 
+def _insert_daily_values_ignore_bulk(rows: list[dict]) -> int:
+    """Bulk insert daily_values rows using SQLite INSERT OR IGNORE.
+
+    Returns best-effort count of inserted rows. (SQLite rowcount for executemany is
+    usually reliable, but can vary depending on driver.)
+    """
+    if not rows:
+        return 0
+    stmt = sqlite_insert(DailyValue).values(rows).prefix_with("OR IGNORE")
+    res = session.execute(stmt)
+    return int(getattr(res, "rowcount", 0) or 0)
+
+
+# Keep the single-row helper for potential future/diagnostics use.
 def _insert_daily_value_ignore(
     entity_id: int, date_id: int, value_name_id: int, value: str
 ) -> bool:
@@ -124,21 +138,20 @@ def _insert_daily_value_ignore(
 def get_or_create_entity(cik, company_name: str | None = None):
     """Get an `Entity` by CIK or create it.
 
-    If `company_name` is provided and the existing entity has no name, it will be
-    backfilled.
+    Optimized: avoids committing inside helper; caller controls transaction.
     """
     with session.no_autoflush:
         entity = session.query(Entity).filter_by(cik=cik).first()
     if not entity:
         entity = Entity(cik=cik, company_name=company_name)
         session.add(entity)
-        session.commit()
+        session.flush()  # assign PK without committing
         return entity
 
     # backfill company_name if missing
     if company_name and not entity.company_name:
         entity.company_name = company_name
-        session.commit()
+        session.flush()
 
     return entity
 
@@ -146,7 +159,7 @@ def get_or_create_entity(cik, company_name: str | None = None):
 def get_or_create_unit(name: str | None):
     """Get a `Unit` by name or create it.
 
-    Empty/None names are normalized to the sentinel unit name `NA`.
+    Optimized: avoids committing inside helper; caller controls transaction.
     """
     unit_name = (name or "NA").strip() or "NA"
     with session.no_autoflush:
@@ -154,15 +167,14 @@ def get_or_create_unit(name: str | None):
     if not unit:
         unit = Unit(name=unit_name)
         session.add(unit)
-        session.commit()
+        session.flush()
     return unit
 
 
 def get_or_create_value_name(name, unit_id: int | None = None):
     """Get a `ValueName` by SEC concept name or create it.
 
-    If `unit_id` is provided and the existing ValueName has no unit set, it will be
-    backfilled.
+    Optimized: avoids committing inside helper; caller controls transaction.
     """
     with session.no_autoflush:
         value_name = session.query(ValueName).filter_by(name=name).first()
@@ -174,13 +186,13 @@ def get_or_create_value_name(name, unit_id: int | None = None):
             added_on=utcnow(),
         )
         session.add(value_name)
-        session.commit()
+        session.flush()
         return value_name
 
     # backfill unit_id if missing
     if unit_id and getattr(value_name, "unit_id", None) is None:
         value_name.unit_id = unit_id
-        session.commit()
+        session.flush()
 
     return value_name
 
@@ -188,6 +200,7 @@ def get_or_create_value_name(name, unit_id: int | None = None):
 def get_or_create_date_entry(date_str):
     """Get a `DateEntry` by `YYYY-MM-DD` string or create it.
 
+    Optimized: avoids committing inside helper; caller controls transaction.
     Returns None if the date string cannot be parsed.
     """
     try:
@@ -200,7 +213,7 @@ def get_or_create_date_entry(date_str):
     if not date_entry:
         date_entry = DateEntry(date=date_obj)
         session.add(date_entry)
-        session.commit()
+        session.flush()
     return date_entry
 
 
@@ -405,14 +418,17 @@ def process_companyfacts_file(
 ) -> tuple[int, int]:
     """Process a single companyfacts JSON payload.
 
+    Optimized: batch INSERT OR IGNORE into daily_values per file.
+
     Returns `(planned_inserts, duplicates_skipped)`.
     """
     facts = data.get("facts")
     if not _is_nonempty_dict(facts):
         return 0, 0
 
+    rows: list[dict] = []
     inserts_planned = 0
-    duplicates = 0
+
     for value_name, unit_name, end_date, raw_val in iter_companyfacts_points(facts):
         date_id = get_date_id_cached(end_date)
         if not date_id:
@@ -420,13 +436,17 @@ def process_companyfacts_file(
         unit_id = get_unit_id_cached(unit_name)
         vn_id = get_value_name_id_cached(value_name, unit_id)
         inserts_planned += 1
-        if not _insert_daily_value_ignore(
-            entity_id=entity_id,
-            date_id=date_id,
-            value_name_id=vn_id,
-            value=_safe_str(raw_val),
-        ):
-            duplicates += 1
+        rows.append(
+            dict(
+                entity_id=entity_id,
+                date_id=date_id,
+                value_name_id=vn_id,
+                value=_safe_str(raw_val),
+            )
+        )
+
+    inserted = _insert_daily_values_ignore_bulk(rows)
+    duplicates = max(inserts_planned - inserted, 0)
     return inserts_planned, duplicates
 
 
@@ -441,6 +461,8 @@ def process_submissions_file(
     get_date_id_cached,
 ) -> tuple[str, int, int, str | None]:
     """Process a single submissions JSON payload.
+
+    Optimized: batch INSERT OR IGNORE into daily_values per file.
 
     Returns `(schema, planned_inserts, duplicates_skipped, unprocessed_reason_or_none)`.
     """
@@ -457,8 +479,8 @@ def process_submissions_file(
     if not filing_dates and not report_dates:
         return schema, 0, 0, "submissions_missing_dates"
 
+    rows: list[dict] = []
     inserts_planned = 0
-    duplicates = 0
 
     na_unit_id = get_unit_id_cached("NA")
 
@@ -466,20 +488,23 @@ def process_submissions_file(
         recent
     ):
         if not date_str:
-            # keep as unprocessed detail; don't insert without a date_id
             continue
         date_id = get_date_id_cached(date_str)
         if not date_id:
             continue
         vn_id = get_value_name_id_cached(value_name, na_unit_id)
         inserts_planned += 1
-        if not _insert_daily_value_ignore(
-            entity_id=entity_id,
-            date_id=date_id,
-            value_name_id=vn_id,
-            value=_safe_str(raw_val),
-        ):
-            duplicates += 1
+        rows.append(
+            dict(
+                entity_id=entity_id,
+                date_id=date_id,
+                value_name_id=vn_id,
+                value=_safe_str(raw_val),
+            )
+        )
+
+    inserted = _insert_daily_values_ignore_bulk(rows)
+    duplicates = max(inserts_planned - inserted, 0)
 
     return schema, inserts_planned, duplicates, None
 
@@ -526,6 +551,9 @@ def main():
     date_cache: dict[str, int] = {}
 
     totals = Counter()
+
+    # Reduce noisy per-file info logs; keep progress and errors.
+    verbose_per_file = False
 
     def _sample(reason: str, fname: str, limit: int = 10) -> None:
         if len(skip_reason_samples[reason]) < limit:
@@ -574,26 +602,16 @@ def main():
         t0 = perf_counter()
         if idx % 100 == 0:
             logger.info("Progress: %s/%s files", idx, total_files)
+            print(f"Progress: {idx}/{total_files} files")
 
         rel_path = os.path.relpath(file_path, RAW_DATA_DIR)
-        print(f"Processing file {idx}/{total_files}: [{source}] {rel_path}")
-        logger.info(f"Processing file {idx}/{total_files}: [{source}] {rel_path}")
+        if verbose_per_file:
+            print(f"Processing file {idx}/{total_files}: [{source}] {rel_path}")
+            logger.info(f"Processing file {idx}/{total_files}: [{source}] {rel_path}")
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-
-            if not isinstance(data, dict):
-                _log_unprocessed(
-                    source=source,
-                    filename=rel_path,
-                    reason="non_dict_json",
-                    details=f"type={type(data).__name__}",
-                    skip_reasons=skip_reasons,
-                    skip_reason_samples=skip_reason_samples,
-                    error_files=error_files,
-                )
-                continue
 
             if not isinstance(data, dict):
                 _log_unprocessed(
