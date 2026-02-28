@@ -1,12 +1,13 @@
 import os
 import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.value_names import Base, ValueName
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'sec.db')
-engine = create_engine(f'sqlite:///{DB_PATH}')
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "sec.db")
+engine = create_engine(f"sqlite:///{DB_PATH}")
 Session = sessionmaker(bind=engine)
 session = Session()
 

@@ -1,8 +1,9 @@
 from sqlalchemy import Column, Integer, String, Text
 from db import Base
 
+
 class SubmissionsFlat(Base):
-    __tablename__ = 'submissions_flat'
+    __tablename__ = "submissions_flat"
     id = Column(Integer, primary_key=True, autoincrement=True)
     filename = Column(Text)
     cik = Column(Text)

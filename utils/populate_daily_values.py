@@ -213,11 +213,7 @@ def main():
 
             if recent is None and isinstance(data, dict):
                 # flattened recent payload: top-level arrays like accessionNumber/filingDate/form...
-                if (
-                    "filings" not in data
-                    and "accessionNumber" in data
-                    and "filingDate" in data
-                ):
+                if "filings" not in data and "accessionNumber" in data and "filingDate" in data:
                     schema = "flattened_recent"
                     recent = data
                     cik = data.get("cik")
@@ -271,9 +267,7 @@ def main():
                 error_files.append(filename)
                 continue
 
-            logger.info(
-                "File %s detected schema=%s keys=%s", filename, schema, len(recent)
-            )
+            logger.info("File %s detected schema=%s keys=%s", filename, schema, len(recent))
 
             # Loop over all value names in recent
             for value_name in recent.keys():
@@ -357,13 +351,9 @@ def main():
                         date_str = None
                         if value_name in ["filingDate", "reportDate"]:
                             date_str = val
-                        elif "filingDate" in recent and idx_val < len(
-                            recent["filingDate"]
-                        ):
+                        elif "filingDate" in recent and idx_val < len(recent["filingDate"]):
                             date_str = recent["filingDate"][idx_val]
-                        elif "reportDate" in recent and idx_val < len(
-                            recent["reportDate"]
-                        ):
+                        elif "reportDate" in recent and idx_val < len(recent["reportDate"]):
                             date_str = recent["reportDate"][idx_val]
                         if not date_str:
                             continue
@@ -430,9 +420,7 @@ def main():
             except Exception as e:
                 session.rollback()
                 error_reasons[type(e).__name__] += 1
-                logger.error(
-                    "Commit failed for file %s: %s", filename, e, exc_info=True
-                )
+                logger.error("Commit failed for file %s: %s", filename, e, exc_info=True)
                 error_files.append(filename)
                 continue
 

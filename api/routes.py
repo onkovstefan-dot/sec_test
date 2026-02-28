@@ -3,16 +3,18 @@ from models.submissions_flat import SubmissionsFlat
 from db import SessionLocal
 import os
 
-api_bp = Blueprint('api', __name__)
+api_bp = Blueprint("api", __name__)
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'sec.db')
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "sec.db")
 
 # @api_bp.route('/')
 # def hello():
 #     return 'Hello, world!'
 
-@api_bp.route('/', methods=['GET'])
+
+@api_bp.route("/", methods=["GET"])
 # @api_bp.route('/', methods=['GET'])
+
 
 def get_submissions_flat_sample():
     session = SessionLocal()

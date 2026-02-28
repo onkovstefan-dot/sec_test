@@ -16,12 +16,8 @@ def test_daily_values_text_schema_and_insert_roundtrip(tmp_path: Path):
     cur = con.cursor()
 
     # Minimal schema compatible with the project tables.
-    cur.execute(
-        "CREATE TABLE entities (id INTEGER PRIMARY KEY AUTOINCREMENT, cik TEXT NOT NULL)"
-    )
-    cur.execute(
-        "CREATE TABLE dates (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL)"
-    )
+    cur.execute("CREATE TABLE entities (id INTEGER PRIMARY KEY AUTOINCREMENT, cik TEXT NOT NULL)")
+    cur.execute("CREATE TABLE dates (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL)")
     cur.execute(
         "CREATE TABLE value_names (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, source INTEGER NOT NULL, added_on TEXT NOT NULL)"
     )
