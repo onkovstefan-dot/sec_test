@@ -7,6 +7,10 @@ on:
 jobs:
   test-and-lint:
     runs-on: ubuntu-latest
+    env:
+      PYTHONUNBUFFERED: "1"
+      # Reduce cross-environment differences from externally installed pytest plugins.
+      PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -20,6 +24,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+
+      - name: Debug versions
+        run: |
+          python -V
+          python -c "import sys; print('executable:', sys.executable)"
+          pip --version
+          python -c "import flask, sqlalchemy, pytest; print('flask', flask.__version__, 'sqlalchemy', sqlalchemy.__version__, 'pytest', pytest.__version__)"
 
       - name: Black (format check)
         run: black --check .
