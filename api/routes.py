@@ -1,8 +1,15 @@
+import os
+import sys
+
+# Allow running this module directly (or via certain runners) without package context.
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from flask import Blueprint, jsonify, request, render_template_string, redirect, url_for
 from models.entities import Entity
 from models.daily_values import DailyValue
 from models.dates import DateEntry
 from models.value_names import ValueName
+from models.units import Unit
 from db import SessionLocal
 from sqlalchemy import inspect
 
@@ -133,9 +140,10 @@ def daily_values_page():
             )
 
         rows = (
-            session.query(DailyValue, DateEntry, ValueName)
+            session.query(DailyValue, DateEntry, ValueName, Unit)
             .join(DateEntry, DailyValue.date_id == DateEntry.id)
             .join(ValueName, DailyValue.value_name_id == ValueName.id)
+            .outerjoin(Unit, ValueName.unit_id == Unit.id)
             .filter(DailyValue.entity_id == entity_id)
             .order_by(DateEntry.date, ValueName.name)
             .all()
@@ -149,16 +157,17 @@ def daily_values_page():
                     "cik": entity.cik,
                     "date": str(dv_date.date),
                     "value_name": vn.name,
+                    "unit": (unit.name if unit else "NA"),
                     "value": parse_primitive(dv.value),
                 }
-                for dv, dv_date, vn in rows
+                for dv, dv_date, vn, unit in rows
             ]
             return jsonify(result)
 
         table_rows_html = "".join(
-            f"<tr><td>{str(dv_date.date)}</td><td>{vn.name}</td>"
+            f"<tr><td>{str(dv_date.date)}</td><td>{vn.name}</td><td>{(unit.name if unit else 'NA')}</td>"
             f"<td class='num'>{parse_primitive(dv.value)}</td></tr>"
-            for dv, dv_date, vn in rows
+            for dv, dv_date, vn, unit in rows
         )
 
         html = f"""<!DOCTYPE html>
@@ -166,7 +175,7 @@ def daily_values_page():
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Daily Values  {entity.cik}</title>
+  <title>Daily Values  {entity.cik}</title>
   <style>
     *, *::before, *::after {{ box-sizing: border-box; }}
     body {{ font-family: system-ui, sans-serif; margin: 0; background: #f5f7fa; color: #1a1a2e; }}
@@ -207,11 +216,12 @@ def daily_values_page():
           <tr>
             <th>Date</th>
             <th>Value Name</th>
+            <th>Unit</th>
             <th>Value</th>
           </tr>
         </thead>
         <tbody>
-          {table_rows_html if table_rows_html else '<tr><td colspan="3" class="empty">No records found.</td></tr>'}
+          {table_rows_html if table_rows_html else '<tr><td colspan="4" class="empty">No records found.</td></tr>'}
         </tbody>
       </table>
     </div>
