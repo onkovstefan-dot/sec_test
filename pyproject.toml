@@ -7,7 +7,11 @@ profile = "black"
 line_length = 100
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["pytests"]
+python_files = ["test_*.py"]
+
+# Keep test artifacts / fixtures in a dedicated folder.
+addopts = ["-ra"]
 
 [tool.pylint."MAIN"]
 py-version = "3.13"
