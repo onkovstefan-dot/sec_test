@@ -87,10 +87,7 @@ def timed_block(
         # Wait first interval before printing a ping.
         while not stop_event.wait(ping_every_seconds):
             msg = f"[{_ts_now()}] ping: still running '{name}'..."
-            try:
-                print_fn(msg)
-            except Exception:
-                pass
+            # stdout disabled; keep logging only
             if logger_obj is not None:
                 try:
                     logger_obj.info(msg)
@@ -101,10 +98,7 @@ def timed_block(
     t.start()
 
     start_msg = f"[{_ts_now()}] START {name}"
-    try:
-        print_fn(start_msg)
-    except Exception:
-        pass
+    # stdout disabled; keep logging only
     if logger_obj is not None:
         logger_obj.info(start_msg)
 
@@ -118,10 +112,7 @@ def timed_block(
             f"[{_ts_now()}] END {name} | started={start_wall.isoformat(timespec='seconds')} "
             f"ended={end_wall.isoformat(timespec='seconds')} elapsed={elapsed:.2f}s"
         )
-        try:
-            print_fn(end_msg)
-        except Exception:
-            pass
+        # stdout disabled; keep logging only
         if logger_obj is not None:
             logger_obj.info(end_msg)
 
@@ -164,7 +155,8 @@ _file_handler.setLevel(logging.INFO)
 _file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
 
 _console_handler = logging.StreamHandler()
-_console_handler.setLevel(logging.WARNING)
+# Keep console output quiet; warnings (e.g., unprocessed files) are still written to the log file.
+_console_handler.setLevel(logging.ERROR)
 _console_handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
 
 if not logger.handlers:
