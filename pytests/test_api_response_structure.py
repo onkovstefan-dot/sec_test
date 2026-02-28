@@ -9,9 +9,14 @@ from pytests.common import create_empty_sqlite_db
 
 
 @pytest.fixture()
-def client(tmp_path):
+def client(tmp_path, monkeypatch):
     # Create minimal DB rows so endpoints that touch DB can render.
     session, engine = create_empty_sqlite_db(tmp_path / "test_sec.db")
+
+    # IMPORTANT: ensure the Flask app uses this temp DB (CI doesn't have data/sec.db).
+    from pytests.common import patch_app_db
+
+    patch_app_db(monkeypatch, engine)
 
     from datetime import date
 
@@ -46,12 +51,14 @@ def client(tmp_path):
 
     session.commit()
     session.close()
-    engine.dispose()
 
     app = create_app()
     app.config.update(TESTING=True)
+
     with app.test_client() as c:
         yield c
+
+    engine.dispose()
 
 
 def _assert_envelope(payload: Any) -> None:
