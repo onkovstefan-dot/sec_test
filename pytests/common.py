@@ -25,6 +25,7 @@ __all__ = [
     "create_empty_sqlite_db",
     "add_dicts",
     "add_json_like",
+    "patch_app_db",
 ]
 
 
@@ -73,3 +74,23 @@ def add_json_like(session: Session, model, items: Iterable[Any]) -> None:
             objs.append(item)
     session.add_all(objs)
     session.commit()
+
+
+def patch_app_db(monkeypatch, engine: Engine) -> sessionmaker:
+    """Force Flask routes to use a provided SQLAlchemy engine.
+
+    The application imports `SessionLocal` from `db` in multiple modules. For tests,
+    we patch the `db` module globals so that all of those imports point at the
+    test engine.
+
+    Returns the new SessionLocal (sessionmaker).
+    """
+
+    from sqlalchemy.orm import sessionmaker as _sessionmaker
+
+    import db as db_module
+
+    SessionLocal = _sessionmaker(bind=engine)
+    monkeypatch.setattr(db_module, "engine", engine, raising=True)
+    monkeypatch.setattr(db_module, "SessionLocal", SessionLocal, raising=True)
+    return SessionLocal

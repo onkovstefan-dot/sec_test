@@ -14,6 +14,7 @@ from models.entities import Entity  # noqa: E402
 from models.dates import DateEntry  # noqa: E402
 from models.units import Unit  # noqa: E402
 from models.value_names import ValueName  # noqa: E402
+from models.entity_metadata import EntityMetadata  # noqa: E402
 
 # Ensure all tables are registered on Base.metadata
 import models.daily_values  # noqa: F401,E402
@@ -54,15 +55,22 @@ def _parse_ymd(s: str) -> _date | None:
 def _get_or_create_entity(session, cik10: str, company_name: str | None = None) -> int:
     with session.no_autoflush:
         row = session.query(Entity).filter_by(cik=cik10).first()
-    if row:
-        if company_name and not row.company_name:
-            row.company_name = company_name
-            session.flush()
-        return row.id
+    if not row:
+        row = Entity(cik=cik10)
+        session.add(row)
+        session.flush()
 
-    row = Entity(cik=cik10, company_name=company_name)
-    session.add(row)
-    session.flush()
+    if company_name:
+        with session.no_autoflush:
+            meta = session.query(EntityMetadata).filter_by(entity_id=row.id).first()
+        if not meta:
+            meta = EntityMetadata(entity_id=row.id, company_name=company_name)
+            session.add(meta)
+            session.flush()
+        elif not meta.company_name:
+            meta.company_name = company_name
+            session.flush()
+
     return row.id
 
 

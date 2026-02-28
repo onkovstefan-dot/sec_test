@@ -57,6 +57,7 @@ from models.units import Unit  # noqa: E402
 from models.dates import DateEntry  # noqa: E402
 from models.daily_values import DailyValue  # noqa: E402
 from models.file_processing import FileProcessing  # noqa: E402
+from models.entity_metadata import EntityMetadata  # noqa: E402
 from logging_utils import get_logger  # noqa: E402
 
 
@@ -231,19 +232,26 @@ def get_or_create_entity(cik, company_name: str | None = None):
     """Get an `Entity` by CIK or create it.
 
     Optimized: avoids committing inside helper; caller controls transaction.
+    Also backfills `entity_metadata.company_name` when provided.
     """
     with session.no_autoflush:
         entity = session.query(Entity).filter_by(cik=cik).first()
     if not entity:
-        entity = Entity(cik=cik, company_name=company_name)
+        entity = Entity(cik=cik)
         session.add(entity)
         session.flush()  # assign PK without committing
-        return entity
 
-    # backfill company_name if missing
-    if company_name and not entity.company_name:
-        entity.company_name = company_name
-        session.flush()
+    # Create/backfill metadata (1:1)
+    if company_name:
+        with session.no_autoflush:
+            meta = session.query(EntityMetadata).filter_by(entity_id=entity.id).first()
+        if not meta:
+            meta = EntityMetadata(entity_id=entity.id, company_name=company_name)
+            session.add(meta)
+            session.flush()
+        elif not meta.company_name:
+            meta.company_name = company_name
+            session.flush()
 
     return entity
 
