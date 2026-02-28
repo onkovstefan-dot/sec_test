@@ -1,8 +1,8 @@
 import os
 import shutil
 
-src_dir = '/Users/stefan/Downloads/companyfacts'
-dst_dir = 'raw_data/companyfacts'
+src_dir = "/Users/stefan/Downloads/companyfacts"
+dst_dir = "raw_data/companyfacts"
 
 if not os.path.exists(dst_dir):
     os.makedirs(dst_dir)

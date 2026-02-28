@@ -11,5 +11,5 @@ app.register_blueprint(api_bp)
 # Create all tables
 Base.metadata.create_all(bind=engine)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
