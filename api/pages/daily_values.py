@@ -70,7 +70,14 @@ def daily_values_page():
 
         # JSON response (kept for API use)
         if request.accept_mimetypes.best == "application/json":
-            return jsonify(serialized_rows)
+            return jsonify(
+                {
+                    "entity_id": entity_id,
+                    "cik": entity.cik,
+                    "count": len(serialized_rows),
+                    "rows": serialized_rows,
+                }
+            )
 
         return (
             render_template(

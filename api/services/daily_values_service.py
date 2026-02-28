@@ -16,12 +16,13 @@ def normalize_cik(cik: str) -> str:
 
     Behavior:
     - Trim whitespace
-    - If numeric, left-pad to 10 digits (SEC common format)
+    - If numeric, interpret as an integer and left-pad to 10 digits (SEC common format)
+      (this makes inputs like '1' and '0000000001' normalize to the same value)
     - Otherwise, return as-is (trimmed)
     """
     raw = (cik or "").strip()
     if raw.isdigit():
-        return raw.zfill(10)
+        return str(int(raw)).zfill(10)
     return raw
 
 

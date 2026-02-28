@@ -1,6 +1,6 @@
 from flask import Blueprint, request, redirect, url_for, render_template
 
-from db import SessionLocal
+import db
 from models.daily_values import DailyValue
 
 from api.services.daily_values_service import (
@@ -18,7 +18,7 @@ def check_cik_page():
     cik_input = request.args.get("cik", "").strip()
     cik = normalize_cik(cik_input)
 
-    session = SessionLocal()
+    session = db.SessionLocal()
     try:
         # Only show entities that actually have at least one daily_values row
         entities = list_entities_with_daily_values(session)
@@ -26,6 +26,17 @@ def check_cik_page():
         message = ""
         if cik:
             selected_entity = get_entity_by_cik(session, cik)
+
+            # Fallback: match by integer value in case stored CIKs have legacy formatting
+            if not selected_entity and cik_input.strip().isdigit():
+                try:
+                    target = int(cik_input.strip())
+                    selected_entity = next(
+                        (e for e in entities if int(e.cik) == target), None
+                    )
+                except Exception:
+                    selected_entity = None
+
             if not selected_entity:
                 message = f"No entity found for CIK '{cik}'."
             else:

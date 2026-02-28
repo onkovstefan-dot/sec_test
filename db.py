@@ -33,5 +33,12 @@ try:
 except Exception:
     pass
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# expire_on_commit=False keeps attributes (like `.id`) accessible after commit,
+# which makes app code and tests that close the session more robust.
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False,
+    bind=engine,
+)
 Base = declarative_base()

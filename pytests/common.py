@@ -45,7 +45,8 @@ def create_empty_sqlite_db(db_path: Path) -> tuple[Session, Engine]:
 
     engine = make_sqlite_engine(db_path)
     Base.metadata.create_all(engine)
-    SessionLocal = sessionmaker(bind=engine)
+    # Keep ids available after commit in tests.
+    SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
     return SessionLocal(), engine
 
 
@@ -90,7 +91,7 @@ def patch_app_db(monkeypatch, engine: Engine) -> sessionmaker:
 
     import db as db_module
 
-    SessionLocal = _sessionmaker(bind=engine)
+    SessionLocal = _sessionmaker(bind=engine, expire_on_commit=False)
     monkeypatch.setattr(db_module, "engine", engine, raising=True)
     monkeypatch.setattr(db_module, "SessionLocal", SessionLocal, raising=True)
     return SessionLocal
