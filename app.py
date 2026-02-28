@@ -3,7 +3,7 @@ import os
 from flask import Flask, render_template
 
 from api.blueprint import create_api_blueprint
-from config import Config, configure_logging
+from config import configure_logging
 from db import Base, engine
 
 
@@ -19,8 +19,8 @@ def init_db() -> None:
 def create_app() -> Flask:
     app = Flask(__name__)
 
-    # Load config from env
-    app.config.from_object(Config)
+    # Load config from file.
+    app.config.from_pyfile("settings.py")
 
     # Configure logging
     configure_logging(app.logger, app.config.get("LOG_LEVEL", "INFO"))
