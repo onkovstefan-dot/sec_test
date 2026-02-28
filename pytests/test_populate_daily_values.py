@@ -31,6 +31,16 @@ def sample_submissions_dict() -> dict:
     return json.loads(p.read_text(encoding="utf-8"))
 
 
+@pytest.fixture()
+def sample_submissions_missing_dates_dict() -> dict:
+    p = (
+        Path(__file__).resolve().parents[1]
+        / "test_data"
+        / "submissions_missing_dates_sample.json"
+    )
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
 def _load_script_module():
     # Import the script as a module so we can unit-test helpers.
     return importlib.import_module("utils.populate_daily_values")
@@ -133,6 +143,62 @@ def test_process_companyfacts_file_inserts_daily_value(
     from models.daily_values import DailyValue
 
     assert session.query(DailyValue).count() == 1
+
+
+def test_process_submissions_file_returns_unprocessed_reason_when_dates_missing(
+    tmp_db_session, sample_submissions_missing_dates_dict, monkeypatch
+):
+    session, engine = tmp_db_session
+    m = _load_script_module()
+
+    # Patch global session/engine to temp DB.
+    monkeypatch.setattr(m, "engine", engine, raising=False)
+    monkeypatch.setattr(m, "session", session, raising=False)
+
+    entity = m.get_or_create_entity("0000000013", company_name="SAMPLE")
+
+    # Minimal cache fns
+    unit_cache: dict[str, int] = {}
+    value_name_cache: dict[tuple[str, int | None], int] = {}
+    date_cache: dict[str, int] = {}
+
+    def get_unit_id_cached(unit_name: str | None) -> int:
+        key = (unit_name or "NA").strip() or "NA"
+        if key in unit_cache:
+            return unit_cache[key]
+        unit_cache[key] = m.get_or_create_unit(key).id
+        return unit_cache[key]
+
+    def get_value_name_id_cached(name: str, unit_id: int | None) -> int:
+        key = (name, unit_id)
+        if key in value_name_cache:
+            return value_name_cache[key]
+        value_name_cache[key] = m.get_or_create_value_name(name, unit_id=unit_id).id
+        return value_name_cache[key]
+
+    def get_date_id_cached(date_str: str) -> int | None:
+        if date_str in date_cache:
+            return date_cache[date_str]
+        de = m.get_or_create_date_entry(date_str)
+        if not de:
+            return None
+        date_cache[date_str] = de.id
+        return de.id
+
+    schema, planned, dups, reason = m.process_submissions_file(
+        data=sample_submissions_missing_dates_dict,
+        source="submissions",
+        filename="submissions_missing_dates_sample.json",
+        entity_id=entity.id,
+        get_unit_id_cached=get_unit_id_cached,
+        get_value_name_id_cached=get_value_name_id_cached,
+        get_date_id_cached=get_date_id_cached,
+    )
+
+    assert schema == "full_submissions"
+    assert planned == 0
+    assert dups == 0
+    assert reason == "submissions_missing_dates"
 
 
 def test_main_end_to_end_discovers_and_processes_two_files(tmp_db_session, monkeypatch):
