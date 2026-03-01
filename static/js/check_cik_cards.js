@@ -40,7 +40,7 @@
         const topMeta = document.createElement('div');
         topMeta.className = 'meta';
         topMeta.style.margin = '.5rem 0 .75rem 0';
-        topMeta.innerHTML = `<strong>CIK:</strong> ${c.cik}`;
+        topMeta.innerHTML = `<strong>Company:</strong> ${c.cik}`;
 
         const dl = document.createElement('dl');
         dl.className = 'cik-card__dl';
@@ -107,7 +107,7 @@
             console.error(err);
             btn.disabled = false;
             btn.textContent = 'Load more';
-            alert('Failed to load more CIKs.');
+            alert('Failed to load more companies.');
         }
     });
 })();

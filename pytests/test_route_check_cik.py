@@ -51,6 +51,8 @@ def test_check_cik_page_renders(client):
     resp = c.get("/check-cik")
     assert resp.status_code == 200
     assert resp.content_type.startswith("text/html")
+    # UI wording
+    assert b"Select Company" in resp.data
 
 
 def test_check_cik_redirects_when_data_exists(client):
