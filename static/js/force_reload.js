@@ -3,24 +3,24 @@
 (function () {
     "use strict";
 
-    function byId(id) {
-        return document.getElementById(id);
+    function attach(el) {
+        el.addEventListener("click", (e) => {
+            e.preventDefault();
+            try {
+                if (window.AppLoading && typeof window.AppLoading.show === "function") {
+                    window.AppLoading.show();
+                }
+            } catch {
+                // ignore
+            }
+
+            // Force a full reload, bypassing cache where possible.
+            window.location.reload(true);
+        });
     }
 
-    const btn = byId("force-reload");
-    if (!btn) return;
+    const els = document.querySelectorAll("[data-force-reload='1'], #force-reload");
+    if (!els || els.length === 0) return;
 
-    btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        try {
-            if (window.AppLoading && typeof window.AppLoading.show === "function") {
-                window.AppLoading.show();
-            }
-        } catch {
-            // ignore
-        }
-
-        // Force a full reload, bypassing cache where possible.
-        window.location.reload(true);
-    });
+    for (const el of els) attach(el);
 })();

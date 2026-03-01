@@ -13,6 +13,33 @@ from db import Base, engine
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 
+def _restart_flag_path() -> str:
+    """Path of a file used to request a process restart.
+
+    A small external watcher (see support/restart_watcher.py) can monitor this file
+    and restart the server process when it's touched.
+    """
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    return os.path.join(repo_root, "tmp", "restart_requested")
+
+
+@admin_bp.route("/request-restart", methods=["POST"])
+def admin_request_restart():
+    """Request a full app restart.
+
+    Note: This does NOT restart the process by itself. It writes a restart flag file
+    that an external watcher can act on.
+    """
+    p = _restart_flag_path()
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+
+    # Write a timestamp + PID for diagnostics.
+    with open(p, "w", encoding="utf-8") as f:
+        f.write(f"ts={time.time()} pid={os.getpid()}\n")
+
+    return redirect(url_for("api.admin.admin_page"))
+
+
 @admin_bp.route("/init-db", methods=["POST"])
 def admin_init_db():
     """Create missing tables on demand."""
