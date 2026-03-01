@@ -130,8 +130,22 @@ def get_logger(
         if process_id is not None:
             file_base = f"{file_base}_process_{int(process_id)}"
 
-        file_name = file_base + ".log"
-        log_path = os.path.join(_logs_dir(), file_name)
+        # If the target file already exists, append _1/_2/... to avoid clobbering and
+        # to make it obvious which run produced which output.
+        logs_dir = _logs_dir()
+        os.makedirs(logs_dir, exist_ok=True)
+
+        candidate = os.path.join(logs_dir, file_base + ".log")
+        if os.path.exists(candidate):
+            i = 1
+            while True:
+                candidate_i = os.path.join(logs_dir, f"{file_base}_{i}.log")
+                if not os.path.exists(candidate_i):
+                    candidate = candidate_i
+                    break
+                i += 1
+
+        log_path = candidate
 
         fh = TimedRotatingFileHandler(
             log_path,
