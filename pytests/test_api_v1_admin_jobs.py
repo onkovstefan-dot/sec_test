@@ -15,19 +15,6 @@ def client(tmp_path, monkeypatch):
     return app.test_client()
 
 
-def test_api_v1_admin_jobs_envelope_and_payload(client):
+def test_api_v1_admin_jobs_removed(client):
     resp = client.get("/api/v1/admin/jobs")
-    assert resp.status_code == 200
-
-    body = resp.get_json()
-    assert set(body.keys()) == {"ok", "data", "error", "meta"}
-    assert body["ok"] is True
-    assert body["error"] in (None, "")
-
-    data = body["data"]
-    assert set(data.keys()) == {"populate_daily_values", "recreate_sqlite_db"}
-
-    for job_name in ("populate_daily_values", "recreate_sqlite_db"):
-        state = data[job_name]
-        assert set(state.keys()) >= {"running", "started_at", "ended_at", "error"}
-        assert isinstance(state["running"], bool)
+    assert resp.status_code == 404

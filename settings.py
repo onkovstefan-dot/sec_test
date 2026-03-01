@@ -10,7 +10,6 @@ SETTINGS: dict[str, object] = {
     # Flask
     "SECRET_KEY": "dev-not-secret",
     # Feature flags
-    "ENABLE_ADMIN": True,
     "ENABLE_DB_CHECK": True,
     # Logging
     "LOG_LEVEL": "INFO",
@@ -18,6 +17,5 @@ SETTINGS: dict[str, object] = {
 
 # Optional convenience exports (mirrors earlier style).
 SECRET_KEY = SETTINGS["SECRET_KEY"]
-ENABLE_ADMIN = SETTINGS["ENABLE_ADMIN"]
 ENABLE_DB_CHECK = SETTINGS["ENABLE_DB_CHECK"]
 LOG_LEVEL = SETTINGS["LOG_LEVEL"]

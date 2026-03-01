@@ -15,19 +15,7 @@ def client(tmp_path, monkeypatch):
     return app.test_client()
 
 
-def test_admin_page_renders(client):
-    resp = client.get("/admin")
-    # App may redirect /admin -> /admin/ depending on strict slashes.
-    assert resp.status_code in (200, 301, 302)
-
-    if resp.status_code in (301, 302):
-        resp = client.get(resp.headers["Location"])
-
-    assert resp.status_code == 200
-    assert resp.content_type.startswith("text/html")
-
-
-def test_admin_recreate_requires_confirmation(client):
-    resp = client.post("/admin/recreate-db", data={"confirm": "nope"})
-    assert resp.status_code in (301, 302)
-    assert "/admin" in resp.headers.get("Location", "")
+def test_admin_routes_removed(client):
+    assert client.get("/admin").status_code == 404
+    assert client.get("/admin/").status_code == 404
+    assert client.post("/admin/recreate-db").status_code == 404

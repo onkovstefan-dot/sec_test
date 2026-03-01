@@ -65,7 +65,6 @@ def create_app() -> Flask:
     # Register routes/blueprints (respect feature flags)
     app.register_blueprint(
         create_api_blueprint(
-            enable_admin=app.config.get("ENABLE_ADMIN", True),
             enable_db_check=app.config.get("ENABLE_DB_CHECK", True),
         )
     )

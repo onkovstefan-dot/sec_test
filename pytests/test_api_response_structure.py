@@ -77,23 +77,9 @@ def _assert_envelope(payload: Any) -> None:
 
 
 def test_api_v1_jobs_json_envelope(client):
+    # Admin jobs endpoint removed.
     res = client.get("/api/v1/admin/jobs")
-    assert res.status_code == 200
-    payload = res.get_json()
-    _assert_envelope(payload)
-
-    assert payload["ok"] is True
-    data = payload["data"]
-    assert isinstance(data, dict)
-    assert "populate_daily_values" in data
-    assert "recreate_sqlite_db" in data
-
-    # Ensure job state has stable struct used by frontend
-    for key in ("populate_daily_values", "recreate_sqlite_db"):
-        state = data[key]
-        assert isinstance(state, dict)
-        for field in ("running", "started_at", "ended_at", "error"):
-            assert field in state
+    assert res.status_code == 404
 
 
 @pytest.mark.parametrize(
@@ -102,7 +88,6 @@ def test_api_v1_jobs_json_envelope(client):
         ("/", 200),
         ("/check-cik", 200),
         ("/daily-values?entity_id=1", 200),
-        ("/admin", 200),
         ("/db-check", 200),
     ],
 )

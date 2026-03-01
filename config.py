@@ -17,7 +17,6 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-not-secret")
 
     # Feature flags
-    ENABLE_ADMIN: bool = _env_bool("ENABLE_ADMIN", True)
     ENABLE_DB_CHECK: bool = _env_bool("ENABLE_DB_CHECK", True)
 
     # Logging
