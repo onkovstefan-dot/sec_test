@@ -15,6 +15,14 @@ check_cik_bp = Blueprint("check_cik", __name__)
 
 
 def _serialize_entity_card(entity, *, meta_row: EntityMetadata | None):
+    """Serialize an entity card.
+
+    `entity` can be either an ORM Entity (with .id/.cik) or a dict like {id, cik}.
+    """
+
+    entity_id = entity.get("id") if isinstance(entity, dict) else entity.id
+    entity_cik = entity.get("cik") if isinstance(entity, dict) else entity.cik
+
     metadata = {}
     company_name = None
 
@@ -52,8 +60,8 @@ def _serialize_entity_card(entity, *, meta_row: EntityMetadata | None):
             ordered_metadata[k] = metadata[k]
 
     return {
-        "entity_id": entity.id,
-        "cik": entity.cik,
+        "entity_id": entity_id,
+        "cik": entity_cik,
         "company_name": company_name,
         "metadata": ordered_metadata,
     }
@@ -103,11 +111,19 @@ def check_cik_page():
             page_entities = list_entities_with_daily_values_page(
                 session, offset=offset, limit=limit
             )
-            entity_ids = [int(e.id) for e in page_entities]
+            entity_ids = [
+                int(e["id"]) if isinstance(e, dict) else int(e.id)
+                for e in page_entities
+            ]
             meta_by_id = _load_metadata_for_entities(session, entity_ids)
 
             cards = [
-                _serialize_entity_card(e, meta_row=meta_by_id.get(int(e.id)))
+                _serialize_entity_card(
+                    e,
+                    meta_row=meta_by_id.get(
+                        int(e["id"]) if isinstance(e, dict) else int(e.id)
+                    ),
+                )
                 for e in page_entities
             ]
             next_offset = offset + len(cards)
@@ -154,11 +170,18 @@ def check_cik_page():
         page_entities = list_entities_with_daily_values_page(
             session, offset=preload_offset, limit=preload_limit
         )
-        entity_ids = [int(e.id) for e in page_entities]
+        entity_ids = [
+            int(e["id"]) if isinstance(e, dict) else int(e.id) for e in page_entities
+        ]
         meta_by_id = _load_metadata_for_entities(session, entity_ids)
 
         cards = [
-            _serialize_entity_card(e, meta_row=meta_by_id.get(int(e.id)))
+            _serialize_entity_card(
+                e,
+                meta_row=meta_by_id.get(
+                    int(e["id"]) if isinstance(e, dict) else int(e.id)
+                ),
+            )
             for e in page_entities
         ]
 

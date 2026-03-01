@@ -28,15 +28,20 @@ def normalize_cik(cik: str) -> str:
     return raw
 
 
-def list_entities_with_daily_values(session: Session) -> List[Entity]:
-    """Return entities that have at least one DailyValue row."""
-    return (
-        session.query(Entity)
+def list_entities_with_daily_values(session: Session) -> List[Dict[str, Any]]:
+    """Return entities that have at least one DailyValue row.
+
+    Note: we only select the columns the UI needs (id, cik) to stay compatible with
+    older SQLite files that may not have newer columns like `entities.canonical_uuid`.
+    """
+    rows = (
+        session.query(Entity.id, Entity.cik)
         .join(DailyValue, DailyValue.entity_id == Entity.id)
         .distinct()
         .order_by(func.coalesce(Entity.cik, ""), Entity.id)
         .all()
     )
+    return [{"id": int(r[0]), "cik": r[1]} for r in rows]
 
 
 def count_entities_with_daily_values(session: Session) -> int:
@@ -52,8 +57,11 @@ def count_entities_with_daily_values(session: Session) -> int:
 
 def list_entities_with_daily_values_page(
     session: Session, *, offset: int, limit: int
-) -> List[Entity]:
-    """Return a single page of entities that have at least one DailyValue."""
+) -> List[Dict[str, Any]]:
+    """Return a single page of entities that have at least one DailyValue.
+
+    Returns a list of {id, cik}.
+    """
     if offset < 0:
         offset = 0
     # Safety bounds (avoid someone asking for 1M rows and killing the server).
@@ -62,8 +70,8 @@ def list_entities_with_daily_values_page(
     if limit > 200:
         limit = 200
 
-    return (
-        session.query(Entity)
+    rows = (
+        session.query(Entity.id, Entity.cik)
         .join(DailyValue, DailyValue.entity_id == Entity.id)
         .distinct()
         .order_by(func.coalesce(Entity.cik, ""), Entity.id)
@@ -71,6 +79,7 @@ def list_entities_with_daily_values_page(
         .limit(limit)
         .all()
     )
+    return [{"id": int(r[0]), "cik": r[1]} for r in rows]
 
 
 def get_entity_by_cik(session: Session, cik: str) -> Optional[Entity]:

@@ -19,6 +19,17 @@ from models.entity_metadata import EntityMetadata
 daily_values_bp = Blueprint("daily_values", __name__)
 
 
+def _make_entity_view(*, entity_id: int, cik: str | None):
+    """Create a minimal object with `.id` / `.cik` attributes for templates/services."""
+
+    class _EntityView:
+        def __init__(self, entity_id: int, cik: str | None):
+            self.id = entity_id
+            self.cik = cik
+
+    return _EntityView(entity_id, cik)
+
+
 @daily_values_bp.route("/daily-values", methods=["GET"])
 def daily_values_page():
     """Second page: display daily_values for a given entity_id (required)."""
@@ -39,13 +50,19 @@ def daily_values_page():
                 {"Content-Type": "text/plain"},
             )
 
-        entity = session.query(Entity).filter(Entity.id == entity_id).first()
-        if not entity:
+        # NOTE: Don't load full Entity ORM rows here. Older DBs may not have new
+        # columns (e.g. entities.canonical_uuid) and SQLAlchemy would SELECT them.
+        row = (
+            session.query(Entity.id, Entity.cik).filter(Entity.id == entity_id).first()
+        )
+        if not row:
             return (
                 f"No entity found for entity_id={entity_id}",
                 404,
                 {"Content-Type": "text/plain"},
             )
+
+        entity = _make_entity_view(entity_id=int(row[0]), cik=row[1])
 
         meta_row = session.query(EntityMetadata).filter_by(entity_id=entity_id).first()
         entity_metadata = None
