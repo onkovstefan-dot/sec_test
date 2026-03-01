@@ -9,8 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PYTHONUNBUFFERED: "1"
-      # Reduce cross-environment differences from externally installed pytest plugins.
-      PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+      # NOTE:
+      # Do NOT set PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 here.
+      # The Playwright E2E tests rely on the `pytest-playwright` plugin
+      # auto-loading to provide the `page` fixture.
+      # If you need to harden CI against third-party plugins, prefer:
+      #   - running pytest with: -p no:<plugin>
+      #   - or explicitly loading needed plugins.
     steps:
       - uses: actions/checkout@v4
 
