@@ -58,7 +58,7 @@ def configure_app_logging(level_name: str = "INFO") -> logging.Logger:
         return app_logger
 
     fmt = _UTCFormatter(
-        fmt="%(asctime)sZ %(levelname)s %(name)s: %(message)s",
+        fmt="%(asctime)sZ %(levelname)s pid=%(process)d %(name)s: %(message)s",
         datefmt="%Y-%m-%dT%H:%M:%S",
     )
 
@@ -110,7 +110,7 @@ def get_logger(module_name: str | None = None) -> logging.Logger:
         logger.propagate = False
 
         fmt = _UTCFormatter(
-            fmt="%(asctime)sZ %(levelname)s %(name)s: %(message)s",
+            fmt="%(asctime)sZ %(levelname)s pid=%(process)d %(name)s: %(message)s",
             datefmt="%Y-%m-%dT%H:%M:%S",
         )
 

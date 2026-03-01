@@ -42,6 +42,8 @@ import argparse
 import json
 import logging
 import threading
+import multiprocessing
+from multiprocessing import Process
 from collections import Counter, defaultdict
 from contextlib import contextmanager
 from datetime import datetime
@@ -150,6 +152,15 @@ def timed(
 
     return _decorator
 
+
+# Default process-sharding configuration.
+# Note: this script does not spawn processes itself; you still need to start N OS
+# processes with --worker-index 0..N-1. This constant is just the default value
+# used when --workers isn't provided.
+DEFAULT_WORKERS = 1
+
+# Internal-only flag used when this module spawns its own worker processes.
+INTERNAL_ARG_WORKER_INDEX = "--_worker-index"
 
 # Setup logging (shared app logger; per-file logs in ./logs/)
 logger = get_logger(__name__)
@@ -916,6 +927,7 @@ def _run(
     workers: int = 1,
     worker_index: int = 0,
     db_path: str = DB_PATH,
+    files_override: list[tuple[str, str, str]] | None = None,
 ) -> None:
     """Run a single worker (process) over its deterministic shard of files."""
 
@@ -928,12 +940,16 @@ def _run(
         session.commit()
 
         with timed_block("populate_daily_values total", logger_obj=logger):
-            files = discover_json_files(RAW_DATA_DIR)
-
-            # Deterministic ordering + deterministic sharding reduces overlap and makes
-            # reruns/debugging easier.
-            files = sorted(files, key=lambda t: (t[0], t[1], t[2]))
-            files = _chunked_files(files, workers=workers, worker_index=worker_index)
+            if files_override is None:
+                files = discover_json_files(RAW_DATA_DIR)
+                # Deterministic ordering + deterministic sharding reduces overlap and makes
+                # reruns/debugging easier.
+                files = sorted(files, key=lambda t: (t[0], t[1], t[2]))
+                files = _chunked_files(
+                    files, workers=workers, worker_index=worker_index
+                )
+            else:
+                files = files_override
 
             processed = _load_processed_file_keys(session)
 
@@ -1215,21 +1231,90 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument(
         "--db", default=DB_PATH, help="Path to SQLite DB (default: data/sec.db)"
     )
-    p.add_argument("--workers", type=int, default=1, help="Total worker processes")
     p.add_argument(
-        "--worker-index",
+        "--workers",
         type=int,
-        default=0,
-        help="Zero-based index of this worker (0..workers-1)",
+        default=None,
+        help=f"Total worker processes (default: {DEFAULT_WORKERS}).",
+    )
+    # Internal-only argument for the subprocess entrypoint.
+    p.add_argument(
+        INTERNAL_ARG_WORKER_INDEX,
+        dest="_worker_index",
+        type=int,
+        default=None,
+        help=argparse.SUPPRESS,
     )
     # Accept unknown args so `pytest` calling `m.main()` doesn't crash.
     args, _unknown = p.parse_known_args(argv)
     return args
 
 
+def _split_into_chunks(
+    files: list[tuple[str, str, str]], workers: int
+) -> list[list[tuple[str, str, str]]]:
+    """Split files into N chunks using the same deterministic round-robin as sharding."""
+    if workers <= 1:
+        return [files]
+    chunks: list[list[tuple[str, str, str]]] = [[] for _ in range(workers)]
+    for i, t in enumerate(files):
+        chunks[i % workers].append(t)
+    return chunks
+
+
+def _run_worker_process(*, workers: int, worker_index: int, db_path: str) -> None:
+    """Subprocess entrypoint."""
+    _run(workers=workers, worker_index=worker_index, db_path=db_path)
+
+
 def main(argv: list[str] | None = None) -> None:
     args = _parse_args(argv)
-    _run(workers=args.workers, worker_index=args.worker_index, db_path=args.db)
+
+    workers = DEFAULT_WORKERS if args.workers is None else int(args.workers)
+    if workers <= 0:
+        raise SystemExit("--workers must be a positive integer")
+
+    # If this is a spawned worker process, run only that shard.
+    if getattr(args, "_worker_index", None) is not None:
+        worker_index = int(args._worker_index)
+        if worker_index < 0 or worker_index >= workers:
+            raise SystemExit(
+                f"Internal worker index must be in [0, {workers - 1}] (got {worker_index}; workers={workers})"
+            )
+        _run(workers=workers, worker_index=worker_index, db_path=args.db)
+        return
+
+    # Parent process: spawn N worker processes and let them split work by index.
+    if workers == 1:
+        _run(workers=1, worker_index=0, db_path=args.db)
+        return
+
+    # Use 'spawn' for macOS compatibility and to avoid fork-related SQLite issues.
+    try:
+        multiprocessing.set_start_method("spawn")
+    except RuntimeError:
+        # Start method already set.
+        pass
+
+    logger.info("Starting populate_daily_values with %s workers", workers)
+
+    procs: list[Process] = []
+    for wi in range(workers):
+        p = Process(
+            target=_run_worker_process,
+            kwargs={"workers": workers, "worker_index": wi, "db_path": args.db},
+        )
+        p.start()
+        procs.append(p)
+
+    exit_codes = []
+    for p in procs:
+        p.join()
+        exit_codes.append(p.exitcode)
+
+    bad = [c for c in exit_codes if c not in (0, None)]
+    if bad:
+        raise SystemExit(f"One or more workers exited non-zero: {exit_codes}")
 
 
 if __name__ == "__main__":
