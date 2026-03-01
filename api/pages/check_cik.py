@@ -6,15 +6,15 @@ from models.entity_metadata import EntityMetadata
 
 from api.services.daily_values_service import (
     get_entity_by_cik,
-    list_entities_with_daily_values,
     normalize_cik,
+    count_entities_with_daily_values,
+    list_entities_with_daily_values_page,
 )
 
 check_cik_bp = Blueprint("check_cik", __name__)
 
 
-def _serialize_entity_card(session, entity):
-    meta_row = session.query(EntityMetadata).filter_by(entity_id=entity.id).first()
+def _serialize_entity_card(entity, *, meta_row: EntityMetadata | None):
     metadata = {}
     company_name = None
 
@@ -59,6 +59,20 @@ def _serialize_entity_card(session, entity):
     }
 
 
+def _load_metadata_for_entities(
+    session, entity_ids: list[int]
+) -> dict[int, EntityMetadata]:
+    if not entity_ids:
+        return {}
+
+    rows = (
+        session.query(EntityMetadata)
+        .filter(EntityMetadata.entity_id.in_(entity_ids))
+        .all()
+    )
+    return {int(r.entity_id): r for r in rows}
+
+
 @check_cik_bp.route("/check-cik", methods=["GET"])
 def check_cik_page():
     """CIK selection page.
@@ -71,6 +85,7 @@ def check_cik_page():
     Behavior compatibility:
     - If a CIK is provided and it has data, redirect to /daily-values as before.
     """
+
     cik_input = request.args.get("cik", "").strip()
     cik = normalize_cik(cik_input)
 
@@ -81,20 +96,28 @@ def check_cik_page():
 
     session = db.SessionLocal()
     try:
-        entities = list_entities_with_daily_values(session)
+        total = count_entities_with_daily_values(session)
 
         # If the user is selecting cards incrementally
         if fmt == "json" or request.accept_mimetypes.best == "application/json":
-            slice_ = entities[offset : offset + limit]
-            cards = [_serialize_entity_card(session, e) for e in slice_]
+            page_entities = list_entities_with_daily_values_page(
+                session, offset=offset, limit=limit
+            )
+            entity_ids = [int(e.id) for e in page_entities]
+            meta_by_id = _load_metadata_for_entities(session, entity_ids)
+
+            cards = [
+                _serialize_entity_card(e, meta_row=meta_by_id.get(int(e.id)))
+                for e in page_entities
+            ]
             next_offset = offset + len(cards)
-            has_more = next_offset < len(entities)
+            has_more = next_offset < total
             return jsonify(
                 {
                     "offset": offset,
                     "limit": limit,
                     "count": len(cards),
-                    "total": len(entities),
+                    "total": total,
                     "next_offset": next_offset,
                     "has_more": has_more,
                     "cards": cards,
@@ -105,16 +128,7 @@ def check_cik_page():
         if cik:
             selected_entity = get_entity_by_cik(session, cik)
 
-            # Fallback: match by integer value in case stored CIKs have legacy formatting
-            if not selected_entity and cik_input.strip().isdigit():
-                try:
-                    target = int(cik_input.strip())
-                    selected_entity = next(
-                        (e for e in entities if int(e.cik) == target), None
-                    )
-                except Exception:
-                    selected_entity = None
-
+            # If user typed a CIK and we found an entity, preserve the legacy redirect.
             if not selected_entity:
                 message = f"No entity found for CIK '{cik}'."
             else:
@@ -134,13 +148,22 @@ def check_cik_page():
                     )
                 message = f"No daily values found for CIK '{cik}'."
 
-        # Initial HTML render: preload first 20
+        # Initial HTML render: preload first page
         preload_offset = 0
         preload_limit = 20
-        preload_entities = entities[preload_offset : preload_offset + preload_limit]
-        cards = [_serialize_entity_card(session, e) for e in preload_entities]
+        page_entities = list_entities_with_daily_values_page(
+            session, offset=preload_offset, limit=preload_limit
+        )
+        entity_ids = [int(e.id) for e in page_entities]
+        meta_by_id = _load_metadata_for_entities(session, entity_ids)
+
+        cards = [
+            _serialize_entity_card(e, meta_row=meta_by_id.get(int(e.id)))
+            for e in page_entities
+        ]
+
         next_offset = preload_offset + len(cards)
-        has_more = next_offset < len(entities)
+        has_more = next_offset < total
 
         return (
             render_template(
@@ -150,7 +173,7 @@ def check_cik_page():
                 next_offset=next_offset,
                 limit=preload_limit,
                 has_more=has_more,
-                total=len(entities),
+                total=total,
             ),
             200,
         )

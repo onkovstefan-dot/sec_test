@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from models.daily_values import DailyValue
@@ -33,6 +34,40 @@ def list_entities_with_daily_values(session: Session) -> List[Entity]:
         .join(DailyValue, DailyValue.entity_id == Entity.id)
         .distinct()
         .order_by(Entity.cik)
+        .all()
+    )
+
+
+def count_entities_with_daily_values(session: Session) -> int:
+    """Return number of entities that have at least one DailyValue."""
+    # COUNT(DISTINCT entities.id) with the join to restrict to entities with values.
+    return int(
+        session.query(func.count(func.distinct(Entity.id)))
+        .join(DailyValue, DailyValue.entity_id == Entity.id)
+        .scalar()
+        or 0
+    )
+
+
+def list_entities_with_daily_values_page(
+    session: Session, *, offset: int, limit: int
+) -> List[Entity]:
+    """Return a single page of entities that have at least one DailyValue."""
+    if offset < 0:
+        offset = 0
+    # Safety bounds (avoid someone asking for 1M rows and killing the server).
+    if limit < 1:
+        limit = 1
+    if limit > 200:
+        limit = 200
+
+    return (
+        session.query(Entity)
+        .join(DailyValue, DailyValue.entity_id == Entity.id)
+        .distinct()
+        .order_by(Entity.cik)
+        .offset(offset)
+        .limit(limit)
         .all()
     )
 

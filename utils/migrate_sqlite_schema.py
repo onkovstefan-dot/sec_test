@@ -8,6 +8,7 @@ Run this script to bring an existing `data/sec.db` in sync with current models.
 It will:
 - add new nullable columns when missing
 - attempt limited type migrations (only when safe)
+- create a small set of indexes used by the app's hot paths
 
 Note: SQLite has limited ALTER TABLE support. For complex migrations,
 create a new DB or use a table-copy strategy.
@@ -31,6 +32,23 @@ def add_column_if_missing(cur: sqlite3.Cursor, table: str, col: str, ddl: str) -
     if col in cols:
         return False
     cur.execute(f"ALTER TABLE {table} ADD COLUMN {col} {ddl}")
+    return True
+
+
+def create_index_if_missing(cur: sqlite3.Cursor, *, name: str, ddl: str) -> bool:
+    """Create an index if it does not already exist.
+
+    Args:
+        name: Index name to check in sqlite_master.
+        ddl: Full CREATE INDEX statement.
+    """
+
+    cur.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='index' AND name=? LIMIT 1", (name,)
+    )
+    if cur.fetchone():
+        return False
+    cur.execute(ddl)
     return True
 
 
@@ -137,6 +155,26 @@ def main() -> None:
 
         # daily_values: if value column exists as FLOAT, SQLite will still let you store TEXT.
         # No action required; keep here for visibility.
+
+        # --- indexes (hot paths) ---
+        # /check-cik uses a join on daily_values.entity_id and sorts by entities.cik.
+        # /daily-values filters by daily_values.entity_id.
+        # /check-cik cards load metadata by entity_metadata.entity_id.
+        changed |= create_index_if_missing(
+            cur,
+            name="ix_daily_values_entity_id",
+            ddl="CREATE INDEX ix_daily_values_entity_id ON daily_values(entity_id)",
+        )
+        changed |= create_index_if_missing(
+            cur,
+            name="ix_entities_cik",
+            ddl="CREATE INDEX ix_entities_cik ON entities(cik)",
+        )
+        changed |= create_index_if_missing(
+            cur,
+            name="ix_entity_metadata_entity_id",
+            ddl="CREATE INDEX ix_entity_metadata_entity_id ON entity_metadata(entity_id)",
+        )
 
         if changed:
             con.commit()
