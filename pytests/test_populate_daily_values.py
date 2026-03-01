@@ -218,6 +218,9 @@ def test_main_end_to_end_discovers_and_processes_two_files(tmp_db_session, monke
     monkeypatch.setattr(m, "session", session, raising=False)
     monkeypatch.setattr(m, "Session", lambda: session, raising=False)
 
+    # Non-interactive in tests/CI.
+    monkeypatch.setattr(m, "_prompt_yes_no", lambda *a, **k: True, raising=True)
+
     # Force discovery to only return our two fixture files.
     root = Path(__file__).resolve().parents[1] / "test_data"
     cpath = str(root / "companyfacts_sample.json")
@@ -234,7 +237,7 @@ def test_main_end_to_end_discovers_and_processes_two_files(tmp_db_session, monke
 
     # Note that engine.url gives us the sqlite path. The test temp db is isolated.
     db_path = str(engine.url).replace("sqlite:///", "")
-    m.main(["--db", db_path])
+    m.main(["--db", db_path, "--workers", "1"])
 
     # Assets + submissions.recent.form + submissions.recent.accessionNumber + submissions.recent.primaryDocument
     assert session.query(DailyValue).count() >= 2
