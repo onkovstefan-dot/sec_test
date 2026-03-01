@@ -158,14 +158,20 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument(
         "--limit",
         type=int,
-        default=50,
-        help="Max number of filings to fetch this run (default: 50)",
+        default=int(os.getenv("SEC_INGEST_DEFAULT_LIMIT", "10")),
+        help=(
+            "Max number of filings to fetch this run. "
+            "Default is controlled by SEC_INGEST_DEFAULT_LIMIT (default: 10)."
+        ),
     )
     p.add_argument(
         "--workers",
         type=int,
-        default=4,
-        help="Concurrent download workers (threads) (default: 4)",
+        default=int(os.getenv("SEC_INGEST_DEFAULT_WORKERS", "1")),
+        help=(
+            "Concurrent download workers (threads). "
+            "Default is controlled by SEC_INGEST_DEFAULT_WORKERS (default: 1)."
+        ),
     )
     # Use parse_known_args so VS Code / other launchers that inject extra args
     # won't break parsing or accidentally get captured as form types.
@@ -418,6 +424,62 @@ def _fetch_and_save_one(*, filing: SecFiling) -> IngestResult:
         )
 
 
+def _db_ingest_diagnostics(*, session: SASession) -> None:
+    """Log DB state that explains why ingest selected nothing."""
+
+    try:
+        total = session.query(func.count(SecFiling.id)).scalar() or 0
+        pending = (
+            session.query(func.count(SecFiling.id))
+            .filter(
+                or_(
+                    SecFiling.fetch_status == None,  # noqa: E711
+                    SecFiling.fetch_status == "pending",
+                )
+            )
+            .scalar()
+            or 0
+        )
+        logger.info(
+            "DB diagnostics | sec_filings_total=%s pending_total=%s",
+            int(total),
+            int(pending),
+        )
+
+        rows = (
+            session.query(SecFiling.fetch_status, func.count(SecFiling.id))
+            .group_by(SecFiling.fetch_status)
+            .order_by(func.count(SecFiling.id).desc())
+            .all()
+        )
+        status_summary = ", ".join(
+            f"{(r[0] if r[0] is not None else 'NULL')}={r[1]}" for r in rows
+        )
+        logger.info("DB diagnostics | fetch_status_counts={%s}", status_summary)
+
+        missing_doc = (
+            session.query(func.count(SecFiling.id))
+            .filter(
+                or_(
+                    SecFiling.fetch_status == None,  # noqa: E711
+                    SecFiling.fetch_status == "pending",
+                )
+            )
+            .filter(
+                or_(SecFiling.document_url == None, SecFiling.document_url == "")
+            )  # noqa: E711
+            .scalar()
+            or 0
+        )
+        if int(missing_doc) > 0:
+            logger.warning(
+                "DB diagnostics | pending rows missing document_url=%s (these will be skipped)",
+                int(missing_doc),
+            )
+    except Exception:
+        logger.debug("DB diagnostics failed", exc_info=True)
+
+
 def run_ingest(
     *,
     session: SASession,
@@ -449,19 +511,28 @@ def run_ingest(
             limit,
             _log_paths_hint(),
         )
+        _db_ingest_diagnostics(session=session)
         return {"selected": 0, "fetched": 0, "failed": 0}
 
     fetched = 0
     failed = 0
 
     logger.info(
-        "Starting ingest | count=%s workers=%s form_types=%s out_dir=%s | %s",
+        "Starting ingest | count=%s workers=%s form_types=%s limit=%s out_dir=%s sec_user_agent_set=%s | %s",
         len(filings),
         workers,
         form_types,
+        limit,
         FORMS_DIR,
+        bool(os.getenv("SEC_EDGAR_USER_AGENT")),
         _log_paths_hint(),
     )
+
+    if not os.getenv("SEC_EDGAR_USER_AGENT"):
+        logger.warning(
+            "SEC_EDGAR_USER_AGENT is not set; SEC endpoints may return 403. "
+            "Set SEC_EDGAR_USER_AGENT to something compliant (e.g. 'MyApp/1.0 you@example.com')."
+        )
 
     with ThreadPoolExecutor(max_workers=max(1, int(workers))) as ex:
         futs = [ex.submit(_fetch_and_save_one, filing=f) for f in filings]
@@ -513,6 +584,11 @@ def main(argv: list[str] | None = None) -> None:
         getattr(args, "form_types", None),
         getattr(args, "limit", None),
         getattr(args, "workers", None),
+    )
+    logger.info(
+        "External-call safety | default_limit=%s(default via SEC_INGEST_DEFAULT_LIMIT) default_workers=%s(default via SEC_INGEST_DEFAULT_WORKERS)",
+        int(os.getenv("SEC_INGEST_DEFAULT_LIMIT", "10")),
+        int(os.getenv("SEC_INGEST_DEFAULT_WORKERS", "1")),
     )
 
     try:
