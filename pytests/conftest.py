@@ -42,6 +42,31 @@ def browser_context_args():
     }
 
 
+def pytest_configure(config):
+    """Pytest hook to configure environment for the test session.
+
+    Route application logs produced during tests into `logs/tests/` and add a
+    per-session run id so each test run creates separate log files.
+    """
+    # These environment variables are read by `logging_utils.get_logger()`.
+    os.environ.setdefault("SEC_TEST_LOG_DIR", "logs/tests")
+
+    # Human-readable UTC timestamp for dedicated log filenames per run.
+    # Example: 2026-03-01_12-34-56
+    from datetime import datetime, timezone
+
+    os.environ.setdefault(
+        "SEC_TEST_LOG_RUN_ID",
+        datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M-%S"),
+    )
+
+    # Ensure directory exists before any module imports configure file handlers.
+    try:
+        os.makedirs(os.environ["SEC_TEST_LOG_DIR"], exist_ok=True)
+    except Exception:
+        pass
+
+
 @pytest.fixture()
 def seeded_live_server(tmp_path, monkeypatch) -> Generator[LiveServer, None, None]:
     """Start a real HTTP server (thread) backed by a temp SQLite DB.

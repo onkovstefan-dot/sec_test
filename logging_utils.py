@@ -29,6 +29,23 @@ _APP_LOGGER_NAME = "sec_test"
 
 
 def _logs_dir() -> str:
+    """Return the directory where logs should be written.
+
+    Supports overriding via environment variable so unit tests/CI can isolate logs.
+
+    - SEC_TEST_LOG_DIR: absolute/relative path to a desired logs directory
+      (e.g. "logs/tests").
+    """
+    override = os.getenv("SEC_TEST_LOG_DIR")
+    if override and override.strip():
+        # If relative, treat it as relative to the project root (same as default).
+        here = os.path.dirname(__file__)
+        return (
+            override
+            if os.path.isabs(override)
+            else os.path.join(here, override.strip())
+        )
+
     # project_root/logs
     here = os.path.dirname(__file__)
     return os.path.join(here, "logs")
@@ -38,6 +55,17 @@ def _sanitize_filename(name: str) -> str:
     # Convert e.g. "api.routes" -> "api_routes"
     name = (name or "app").strip() or "app"
     return "".join(ch if (ch.isalnum() or ch in {"-", "_"}) else "_" for ch in name)
+
+
+def _log_run_id() -> str:
+    """Return a run identifier used in log filenames.
+
+    Controlled via the SEC_TEST_LOG_RUN_ID env var. If not set, returns empty string.
+    The intent is for test runs to set this once per session (e.g. UTC timestamp)
+    so each run gets separate files.
+    """
+    run_id = (os.getenv("SEC_TEST_LOG_RUN_ID") or "").strip()
+    return run_id
 
 
 def configure_app_logging(level_name: str = "INFO") -> logging.Logger:
@@ -127,6 +155,9 @@ def get_logger(
         )
 
         file_base = _sanitize_filename(child_name)
+        run_id = _log_run_id()
+        if run_id:
+            file_base = f"{file_base}__{_sanitize_filename(run_id)}"
         if process_id is not None:
             file_base = f"{file_base}_process_{int(process_id)}"
 
