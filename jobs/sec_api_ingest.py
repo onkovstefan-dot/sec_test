@@ -485,6 +485,22 @@ def _db_ingest_diagnostics(*, session: SASession) -> None:
                 "DB diagnostics | pending rows missing document_url=%s (these will be skipped)",
                 int(missing_doc),
             )
+
+        # Also check failed filings with missing document_url
+        failed_missing_doc = (
+            session.query(func.count(SecFiling.id))
+            .filter(SecFiling.fetch_status == "failed")
+            .filter(
+                or_(SecFiling.document_url == None, SecFiling.document_url == "")
+            )  # noqa: E711
+            .scalar()
+            or 0
+        )
+        if int(failed_missing_doc) > 0:
+            logger.warning(
+                "DB diagnostics | failed rows missing document_url=%s (cannot be retried without upstream fix)",
+                int(failed_missing_doc),
+            )
     except Exception:
         logger.debug("DB diagnostics failed", exc_info=True)
 

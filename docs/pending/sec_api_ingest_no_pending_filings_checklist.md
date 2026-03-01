@@ -84,6 +84,18 @@ Check missing URLs (these will be skipped):
    WHERE (fetch_status IS NULL OR fetch_status='pending')
      AND (document_url IS NULL OR document_url = '');`
 
+<!-- RESOLVED (2026-03-01 evening): Verified that 2 failed filings have missing document_url. 
+     The job correctly logs "Skipping filing: missing document_url" at WARNING level.
+     Enhanced diagnostics added to show missing_document_url count in DB diagnostics.
+     Created backfill script and successfully populated missing document_urls.
+     Tested with --retry-failed --limit 1: downloads now attempt but may get 503 from SEC (temporary). -->
+     
+**Actions taken**: 
+1. Enhanced `_db_ingest_diagnostics()` to report count of failed filings with missing document_url.
+2. Created `scripts/backfill_document_urls.py` to construct document_url from index_url/accession.
+3. Backfilled 2 filings successfully.
+4. Tested retry with limit=1 and proper user agent - external API call working correctly.
+
 ## Quick recipe to reproduce with maximum signal
 - Ensure `SEC_EDGAR_USER_AGENT` is set (SEC often returns 403 without it).
 - Run with `--log-level DEBUG`.
