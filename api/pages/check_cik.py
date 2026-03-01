@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for, render_template
+from flask import Blueprint, request, redirect, url_for, render_template, jsonify
 
 import db
 from models.daily_values import DailyValue
@@ -13,19 +13,100 @@ from api.services.daily_values_service import (
 check_cik_bp = Blueprint("check_cik", __name__)
 
 
+def _serialize_entity_card(session, entity):
+    meta_row = session.query(EntityMetadata).filter_by(entity_id=entity.id).first()
+    metadata = {}
+    company_name = None
+
+    if meta_row is not None:
+        # company_name is both a headline field and also part of metadata
+        company_name = getattr(meta_row, "company_name", None)
+
+        # Keep only actual columns (avoid SA internals)
+        for col in meta_row.__table__.columns:
+            if col.name == "entity_id":
+                continue
+            v = getattr(meta_row, col.name)
+            if v is None:
+                continue
+            metadata[col.name] = v
+
+    # Provide a stable ordering for the most useful fields
+    prefer_order = [
+        "company_name",
+        "sic",
+        "sic_description",
+        "state_of_incorporation",
+        "fiscal_year_end",
+        "filer_category",
+        "entity_type",
+        "tickers",
+        "exchanges",
+        "business_city",
+        "business_state",
+        "phone",
+        "website",
+        "ein",
+    ]
+    ordered_metadata = {}
+    for k in prefer_order:
+        if k in metadata:
+            ordered_metadata[k] = metadata[k]
+    for k in sorted(metadata.keys()):
+        if k not in ordered_metadata:
+            ordered_metadata[k] = metadata[k]
+
+    return {
+        "entity_id": entity.id,
+        "cik": entity.cik,
+        "company_name": company_name,
+        "metadata": ordered_metadata,
+    }
+
+
 @check_cik_bp.route("/check-cik", methods=["GET"])
 def check_cik_page():
-    """CIK selection page: if data exists redirect to /daily-values, else show message."""
+    """CIK selection page.
+
+    UX:
+    - No dropdown. Instead show CIKs as selectable cards with metadata.
+    - Preload 20 cards on initial HTML render.
+    - A "Load more" button fetches additional cards via JSON from this same route.
+
+    Behavior compatibility:
+    - If a CIK is provided and it has data, redirect to /daily-values as before.
+    """
     cik_input = request.args.get("cik", "").strip()
     cik = normalize_cik(cik_input)
 
+    # Pagination for card list
+    offset = request.args.get("offset", default=0, type=int)
+    limit = request.args.get("limit", default=20, type=int)
+    fmt = (request.args.get("format") or "").lower().strip()
+
     session = db.SessionLocal()
     try:
-        # Only show entities that actually have at least one daily_values row
         entities = list_entities_with_daily_values(session)
 
+        # If the user is selecting cards incrementally
+        if fmt == "json" or request.accept_mimetypes.best == "application/json":
+            slice_ = entities[offset : offset + limit]
+            cards = [_serialize_entity_card(session, e) for e in slice_]
+            next_offset = offset + len(cards)
+            has_more = next_offset < len(entities)
+            return jsonify(
+                {
+                    "offset": offset,
+                    "limit": limit,
+                    "count": len(cards),
+                    "total": len(entities),
+                    "next_offset": next_offset,
+                    "has_more": has_more,
+                    "cards": cards,
+                }
+            )
+
         message = ""
-        selected_metadata = None
         if cik:
             selected_entity = get_entity_by_cik(session, cik)
 
@@ -42,19 +123,6 @@ def check_cik_page():
             if not selected_entity:
                 message = f"No entity found for CIK '{cik}'."
             else:
-                meta_row = (
-                    session.query(EntityMetadata)
-                    .filter_by(entity_id=selected_entity.id)
-                    .first()
-                )
-                if meta_row is not None:
-                    selected_metadata = {
-                        col.name: getattr(meta_row, col.name)
-                        for col in meta_row.__table__.columns
-                        if getattr(meta_row, col.name) is not None
-                        and col.name != "entity_id"
-                    }
-
                 has_data = (
                     session.query(DailyValue.id)
                     .filter(DailyValue.entity_id == selected_entity.id)
@@ -71,13 +139,23 @@ def check_cik_page():
                     )
                 message = f"No daily values found for CIK '{cik}'."
 
+        # Initial HTML render: preload first 20
+        preload_offset = 0
+        preload_limit = 20
+        preload_entities = entities[preload_offset : preload_offset + preload_limit]
+        cards = [_serialize_entity_card(session, e) for e in preload_entities]
+        next_offset = preload_offset + len(cards)
+        has_more = next_offset < len(entities)
+
         return (
             render_template(
                 "pages/check_cik.html",
-                entities=entities,
-                cik=cik,
+                cards=cards,
                 message=message,
-                selected_metadata=selected_metadata,
+                next_offset=next_offset,
+                limit=preload_limit,
+                has_more=has_more,
+                total=len(entities),
             ),
             200,
         )

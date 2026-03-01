@@ -227,3 +227,86 @@ td.empty {
     color: #888;
     padding: 1.5rem;
 }
+
+/* Check CIK cards page */
+.cik-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+    margin-top: 1rem;
+}
+
+@media (max-width: 900px) {
+    .cik-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cik-card {
+    display: block;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.05rem;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .05);
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+}
+
+.cik-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, .08);
+    border-color: #cdd7e7;
+}
+
+.cik-card__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: baseline;
+    margin-bottom: 0.55rem;
+}
+
+.cik-card__title {
+    font-weight: 800;
+    color: var(--text);
+}
+
+.cik-card__cik {
+    color: #6b7280;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.cik-card__dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 0.25rem 0.65rem;
+    font-size: 0.92rem;
+    color: #374151;
+}
+
+.cik-card__dl dt {
+    margin: 0;
+    font-weight: 650;
+    color: #6b7280;
+}
+
+.cik-card__dl dd {
+    margin: 0;
+    word-break: break-word;
+}
+
+.cik-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.cik-note {
+    color: #6b7280;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+}

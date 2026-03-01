@@ -5,41 +5,44 @@
 {% block content %}
 <div class="card">
     <div class="toolbar">
-        <div class="hint">Choose a CIK that has at least one daily value.</div>
+        <div>
+            <div class="hint">Pick a company to browse daily values.</div>
+            {% if total is not none %}
+            <div class="cik-note">Showing {{ cards|length }} of {{ total }}.</div>
+            {% endif %}
+        </div>
         <div><a class="button" href="/">Home</a></div>
     </div>
 
-    <form method="GET" action="/check-cik">
-        <label for="cik">Select CIK:</label>
-        <select id="cik" name="cik" required>
-            <option value="">-- select a CIK --</option>
-            {% for e in entities %}
-            <option value="{{ e.cik }}" {% if e.cik==cik %}selected{% endif %}>{{ e.cik }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit">Continue</button>
-    </form>
+    {% if message %}
+    <div class="warn">{{ message }}</div>
+    {% endif %}
 
-    {% if selected_metadata %}
-    <div class="meta" style="margin-top: 14px;">
-        <strong>Entity metadata</strong>
-        <table style="margin-top: 8px; width: 100%;">
-            <tbody>
-                {% for k, v in selected_metadata.items() %}
-                <tr>
-                    <td style="width: 260px; opacity: 0.8;"><code>{{ k }}</code></td>
-                    <td style="word-break: break-word;">{{ v }}</td>
-                </tr>
+    <div id="cik-grid" class="cik-grid">
+        {% for c in cards %}
+        <a class="cik-card" href="/check-cik?cik={{ c.cik }}">
+            <div class="cik-card__header">
+                <div class="cik-card__title">{{ c.company_name or 'Company' }}</div>
+                <div class="cik-card__cik">CIK {{ c.cik }}</div>
+            </div>
+            <dl class="cik-card__dl">
+                {% for k, v in c.metadata.items() %}
+                <dt>{{ k }}</dt>
+                <dd>{{ v }}</dd>
                 {% endfor %}
-            </tbody>
-        </table>
+            </dl>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if has_more %}
+    <div class="cik-actions">
+        <button id="load-more" data-offset="{{ next_offset }}" data-limit="{{ limit }}">Load more</button>
     </div>
     {% endif %}
-
-    {% if message %}
-    <p class="error">{{ message }}</p>
-    {% endif %}
-
-    <p class="hint">After selection, you'll be redirected to the daily values page if data exists.</p>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/check_cik_cards.js') }}"></script>
 {% endblock %}
