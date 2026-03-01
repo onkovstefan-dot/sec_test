@@ -19,17 +19,11 @@ def _serialize_entity_card(session, entity):
     company_name = None
 
     if meta_row is not None:
-        # company_name is both a headline field and also part of metadata
         company_name = getattr(meta_row, "company_name", None)
-
-        # Keep only actual columns (avoid SA internals)
         for col in meta_row.__table__.columns:
             if col.name == "entity_id":
                 continue
-            v = getattr(meta_row, col.name)
-            if v is None:
-                continue
-            metadata[col.name] = v
+            metadata[col.name] = getattr(meta_row, col.name)
 
     # Provide a stable ordering for the most useful fields
     prefer_order = [
@@ -48,6 +42,7 @@ def _serialize_entity_card(session, entity):
         "website",
         "ein",
     ]
+
     ordered_metadata = {}
     for k in prefer_order:
         if k in metadata:

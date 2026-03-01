@@ -20,18 +20,31 @@
 
     <div id="cik-grid" class="cik-grid">
         {% for c in cards %}
-        <a class="cik-card" href="/check-cik?cik={{ c.cik }}">
-            <div class="cik-card__header">
-                <div class="cik-card__title">{{ c.company_name or 'Company' }}</div>
-                <div class="cik-card__cik">CIK {{ c.cik }}</div>
+        <details class="cik-card" data-cik-card="1" data-entity-id="{{ c.entity_id }}" data-cik="{{ c.cik }}">
+            <summary class="cik-card__summary">
+                <div class="cik-card__header" style="margin-bottom: 0;">
+                    <div class="cik-card__title">{{ c.company_name or 'Company' }}</div>
+                    <div class="cik-card__cik">ID {{ c.entity_id }}</div>
+                </div>
+            </summary>
+
+            <div class="cik-card__expanded">
+                <div class="meta" style="margin: .5rem 0 .75rem 0;">
+                    <strong>CIK:</strong> {{ c.cik }}
+                </div>
+
+                <dl class="cik-card__dl">
+                    {% for k, v in c.metadata.items() %}
+                    <dt>{{ k }}</dt>
+                    <dd>{{ v if v is not none and v != '' else '—' }}</dd>
+                    {% endfor %}
+                </dl>
+
+                <div class="cik-card__footer">
+                    <a class="button" href="/daily-values?entity_id={{ c.entity_id }}">Open daily values</a>
+                </div>
             </div>
-            <dl class="cik-card__dl">
-                {% for k, v in c.metadata.items() %}
-                <dt>{{ k }}</dt>
-                <dd>{{ v }}</dd>
-                {% endfor %}
-            </dl>
-        </a>
+        </details>
         {% endfor %}
     </div>
 

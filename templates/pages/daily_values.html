@@ -21,7 +21,7 @@
                 {% for k, v in entity_metadata.items() %}
                 <tr>
                     <td style="width: 260px; opacity: 0.8;"><code>{{ k }}</code></td>
-                    <td style="word-break: break-word;">{{ v }}</td>
+                    <td style="word-break: break-word;">{{ v if v is not none and v != '' else '—' }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

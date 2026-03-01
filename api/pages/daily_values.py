@@ -50,11 +50,11 @@ def daily_values_page():
         meta_row = session.query(EntityMetadata).filter_by(entity_id=entity_id).first()
         entity_metadata = None
         if meta_row is not None:
-            # Keep only actual columns to avoid leaking SA internals
+            # Include ALL fields so the UI can show the full schema.
             entity_metadata = {
                 col.name: getattr(meta_row, col.name)
                 for col in meta_row.__table__.columns
-                if getattr(meta_row, col.name) is not None and col.name != "entity_id"
+                if col.name != "entity_id"
             }
 
         value_name_options, unit_options = get_daily_values_filter_options(
