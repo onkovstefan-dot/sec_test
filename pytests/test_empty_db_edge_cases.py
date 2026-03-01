@@ -33,7 +33,9 @@ def test_service_handles_missing_tables(uninitialized_db_client):
     session = db_module.SessionLocal()
     try:
         assert svc.count_entities_with_daily_values(session) == 0
-        assert svc.list_entities_with_daily_values_page(session, offset=0, limit=20) == []
+        assert (
+            svc.list_entities_with_daily_values_page(session, offset=0, limit=20) == []
+        )
     finally:
         session.close()
         engine.dispose()
@@ -54,7 +56,9 @@ def test_check_cik_renders_empty_state_html(uninitialized_db_client):
 def test_check_cik_empty_state_json(uninitialized_db_client):
     client, engine = uninitialized_db_client
     try:
-        resp = client.get("/check-cik?format=json", headers={"Accept": "application/json"})
+        resp = client.get(
+            "/check-cik?format=json", headers={"Accept": "application/json"}
+        )
         assert resp.status_code == 200
         assert resp.mimetype == "application/json"
         payload = resp.get_json()
