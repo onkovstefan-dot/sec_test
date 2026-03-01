@@ -22,6 +22,10 @@ htmlcov/
 
 # Data / artifacts
 *.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.db.backup_*
 *.log
 
 # Do not commit raw SEC JSON downloads
