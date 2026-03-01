@@ -2,6 +2,7 @@ from flask import Blueprint, request, redirect, url_for, render_template
 
 import db
 from models.daily_values import DailyValue
+from models.entity_metadata import EntityMetadata
 
 from api.services.daily_values_service import (
     get_entity_by_cik,
@@ -24,6 +25,7 @@ def check_cik_page():
         entities = list_entities_with_daily_values(session)
 
         message = ""
+        selected_metadata = None
         if cik:
             selected_entity = get_entity_by_cik(session, cik)
 
@@ -40,6 +42,19 @@ def check_cik_page():
             if not selected_entity:
                 message = f"No entity found for CIK '{cik}'."
             else:
+                meta_row = (
+                    session.query(EntityMetadata)
+                    .filter_by(entity_id=selected_entity.id)
+                    .first()
+                )
+                if meta_row is not None:
+                    selected_metadata = {
+                        col.name: getattr(meta_row, col.name)
+                        for col in meta_row.__table__.columns
+                        if getattr(meta_row, col.name) is not None
+                        and col.name != "entity_id"
+                    }
+
                 has_data = (
                     session.query(DailyValue.id)
                     .filter(DailyValue.entity_id == selected_entity.id)
@@ -62,6 +77,7 @@ def check_cik_page():
                 entities=entities,
                 cik=cik,
                 message=message,
+                selected_metadata=selected_metadata,
             ),
             200,
         )

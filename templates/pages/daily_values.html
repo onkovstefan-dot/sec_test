@@ -13,6 +13,22 @@
         </div>
     </div>
 
+    {% if entity_metadata %}
+    <div class="meta" style="margin: 10px 0 14px 0;">
+        <strong>Entity metadata</strong>
+        <table style="margin-top: 8px; width: 100%;">
+            <tbody>
+                {% for k, v in entity_metadata.items() %}
+                <tr>
+                    <td style="width: 260px; opacity: 0.8;"><code>{{ k }}</code></td>
+                    <td style="word-break: break-word;">{{ v }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
     <form class="filters" method="GET" action="/daily-values">
         <input type="hidden" name="entity_id" value="{{ entity_id }}" />
 

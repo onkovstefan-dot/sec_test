@@ -12,6 +12,9 @@ from api.services.daily_values_service import (
     serialize_daily_values_rows,
 )
 
+# NEW: entity metadata
+from models.entity_metadata import EntityMetadata
+
 
 daily_values_bp = Blueprint("daily_values", __name__)
 
@@ -43,6 +46,16 @@ def daily_values_page():
                 404,
                 {"Content-Type": "text/plain"},
             )
+
+        meta_row = session.query(EntityMetadata).filter_by(entity_id=entity_id).first()
+        entity_metadata = None
+        if meta_row is not None:
+            # Keep only actual columns to avoid leaking SA internals
+            entity_metadata = {
+                col.name: getattr(meta_row, col.name)
+                for col in meta_row.__table__.columns
+                if getattr(meta_row, col.name) is not None and col.name != "entity_id"
+            }
 
         value_name_options, unit_options = get_daily_values_filter_options(
             session, entity_id=entity_id
@@ -83,6 +96,7 @@ def daily_values_page():
                 "pages/daily_values.html",
                 entity=entity,
                 entity_id=entity_id,
+                entity_metadata=entity_metadata,
                 rows=serialized_rows,
                 value_name_options=value_name_options,
                 unit_options=unit_options,

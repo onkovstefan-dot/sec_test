@@ -20,6 +20,22 @@
         <button type="submit">Continue</button>
     </form>
 
+    {% if selected_metadata %}
+    <div class="meta" style="margin-top: 14px;">
+        <strong>Entity metadata</strong>
+        <table style="margin-top: 8px; width: 100%;">
+            <tbody>
+                {% for k, v in selected_metadata.items() %}
+                <tr>
+                    <td style="width: 260px; opacity: 0.8;"><code>{{ k }}</code></td>
+                    <td style="word-break: break-word;">{{ v }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
     {% if message %}
     <p class="error">{{ message }}</p>
     {% endif %}
