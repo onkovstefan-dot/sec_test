@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import OperationalError
 
 from models.daily_values import DailyValue
 from models.dates import DateEntry
@@ -33,26 +34,44 @@ def list_entities_with_daily_values(session: Session) -> List[Dict[str, Any]]:
 
     Note: we only select the columns the UI needs (id, cik) to stay compatible with
     older SQLite files that may not have newer columns like `entities.canonical_uuid`.
+
+    If the DB is empty/uninitialized (tables missing), return an empty list.
     """
-    rows = (
-        session.query(Entity.id, Entity.cik)
-        .join(DailyValue, DailyValue.entity_id == Entity.id)
-        .distinct()
-        .order_by(func.coalesce(Entity.cik, ""), Entity.id)
-        .all()
-    )
+    try:
+        rows = (
+            session.query(Entity.id, Entity.cik)
+            .join(DailyValue, DailyValue.entity_id == Entity.id)
+            .distinct()
+            .order_by(func.coalesce(Entity.cik, ""), Entity.id)
+            .all()
+        )
+    except OperationalError as e:
+        # e.g. sqlite3.OperationalError: no such table: entities
+        msg = str(getattr(e, "orig", e)).lower()
+        if "no such table" in msg:
+            return []
+        raise
+
     return [{"id": int(r[0]), "cik": r[1]} for r in rows]
 
 
 def count_entities_with_daily_values(session: Session) -> int:
-    """Return number of entities that have at least one DailyValue."""
-    # COUNT(DISTINCT entities.id) with the join to restrict to entities with values.
-    return int(
-        session.query(func.count(func.distinct(Entity.id)))
-        .join(DailyValue, DailyValue.entity_id == Entity.id)
-        .scalar()
-        or 0
-    )
+    """Return number of entities that have at least one DailyValue.
+
+    If the DB is empty/uninitialized (tables missing), return 0.
+    """
+    try:
+        return int(
+            session.query(func.count(func.distinct(Entity.id)))
+            .join(DailyValue, DailyValue.entity_id == Entity.id)
+            .scalar()
+            or 0
+        )
+    except OperationalError as e:
+        msg = str(getattr(e, "orig", e)).lower()
+        if "no such table" in msg:
+            return 0
+        raise
 
 
 def list_entities_with_daily_values_page(
@@ -61,6 +80,8 @@ def list_entities_with_daily_values_page(
     """Return a single page of entities that have at least one DailyValue.
 
     Returns a list of {id, cik}.
+
+    If the DB is empty/uninitialized (tables missing), return an empty list.
     """
     if offset < 0:
         offset = 0
@@ -70,15 +91,22 @@ def list_entities_with_daily_values_page(
     if limit > 200:
         limit = 200
 
-    rows = (
-        session.query(Entity.id, Entity.cik)
-        .join(DailyValue, DailyValue.entity_id == Entity.id)
-        .distinct()
-        .order_by(func.coalesce(Entity.cik, ""), Entity.id)
-        .offset(offset)
-        .limit(limit)
-        .all()
-    )
+    try:
+        rows = (
+            session.query(Entity.id, Entity.cik)
+            .join(DailyValue, DailyValue.entity_id == Entity.id)
+            .distinct()
+            .order_by(func.coalesce(Entity.cik, ""), Entity.id)
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+    except OperationalError as e:
+        msg = str(getattr(e, "orig", e)).lower()
+        if "no such table" in msg:
+            return []
+        raise
+
     return [{"id": int(r[0]), "cik": r[1]} for r in rows]
 
 

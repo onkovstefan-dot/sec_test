@@ -18,6 +18,12 @@
     <div class="warn">{{ message }}</div>
     {% endif %}
 
+    {% if total == 0 %}
+    <div class="empty" style="margin-top: .75rem;">
+        No companies found yet. Populate the database and refresh this page.
+    </div>
+    {% endif %}
+
     <div id="cik-grid" class="cik-grid">
         {% for c in cards %}
         <details class="cik-card" data-cik-card="1" data-entity-id="{{ c.entity_id }}" data-cik="{{ c.cik }}">
