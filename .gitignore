@@ -28,5 +28,10 @@ htmlcov/
 *.db.backup_*
 *.log
 
-# Do not commit raw SEC JSON downloads
-raw_data/**/*.json
+# Do not commit raw downloads / generated datasets
+raw_data/**
+!raw_data/.gitkeep
+!raw_data/**/.gitkeep
+
+# (legacy) Do not commit raw SEC JSON downloads
+# raw_data/**/*.json

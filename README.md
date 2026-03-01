@@ -305,3 +305,23 @@ See `docs/RAW_DATA_SOURCES.md` for the curated list of approved data sources.
 - **Value storage:** store numeric values as TEXT in `daily_values.value`; cast with `parse_primitive()`.
 - **Identity resolution:** never match by `entities.cik`; always use `entity_identifiers (scheme, value)`.
 - **SEC rate limit:** ≤ 10 req/s; all HTTP clients must throttle and send a proper `User-Agent`.
+
+---
+
+## Raw data (`raw_data/`) and external files
+
+This repo uses `raw_data/` as a **local cache** for externally sourced files (e.g., SEC EDGAR downloads). Contents of `raw_data/` are **not committed to git**.
+
+### How to obtain / regenerate external files
+
+- **SEC EDGAR (official, free):**
+  - Primary source: https://www.sec.gov/edgar/sec-api-documentation
+  - Bulk data landing page: https://www.sec.gov/dera/data/edgar-log-file-data-set
+  - See `docs/RAW_DATA_SOURCES.md` for a curated list of raw data sources and links.
+
+- **Using this project’s ingestion jobs/scripts:**
+  - `jobs/sec_rss_poller.py` populates the database with new filings to fetch.
+  - `jobs/sec_api_ingest.py` downloads filing documents into `raw_data/forms/`.
+  - `utils/populate_daily_values.py` ingests `raw_data/companyfacts/` and `raw_data/submissions/` into SQLite.
+
+Note: some SEC endpoints require a descriptive `SEC_EDGAR_USER_AGENT` and may enforce rate limits.

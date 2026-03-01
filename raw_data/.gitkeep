@@ -1,0 +1,2 @@
+# This file keeps the raw_data directory in git.
+# All actual raw data files under raw_data/ are intentionally ignored.
