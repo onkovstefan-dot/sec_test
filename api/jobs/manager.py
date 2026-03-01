@@ -1,4 +1,7 @@
 import os
+import signal
+import subprocess
+import sys
 import threading
 import time
 import traceback
@@ -6,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 from db import Base, engine
-from utils import populate_daily_values, recreate_sqlite_db
+from utils import recreate_sqlite_db
 
 
 def read_last_log_line(log_path: str, *, max_bytes: int = 64 * 1024) -> str:
@@ -50,17 +53,32 @@ class PopulateDailyValuesJob:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._state = JobState()
+        self._proc: subprocess.Popen[str] | None = None
 
     def get_state(self) -> Dict[str, Any]:
         with self._lock:
             return self._state.as_dict()
 
     def request_stop(self) -> None:
+        """Request the running job to stop.
+
+        Implementation: terminate the subprocess running populate_daily_values.
+        """
         with self._lock:
             self._state.stop_requested = True
+            proc = self._proc
+
+        if proc is None:
+            return
+
+        try:
+            # Graceful first
+            proc.terminate()
+        except Exception:
+            pass
 
     def start(self) -> bool:
-        """Start utils.populate_daily_values.main() in a daemon thread.
+        """Start utils.populate_daily_values.main() in a background subprocess.
 
         Returns True if a new job was started, False if one is already running.
         """
@@ -72,23 +90,63 @@ class PopulateDailyValuesJob:
             self._state.ended_at = None
             self._state.error = None
             self._state.stop_requested = False
+            self._proc = None
 
         def _runner() -> None:
             try:
                 # Ensure schema exists before running the job.
                 Base.metadata.create_all(bind=engine)
 
-                # cooperative stop: only prevents new run from continuing at start
                 with self._lock:
                     if self._state.stop_requested:
                         return
 
-                populate_daily_values.main()
+                # Run as a subprocess so we can actually stop it.
+                # Uses the current Python interpreter to keep venv behavior.
+                cmd = [
+                    sys.executable,
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(__file__)),
+                        "..",
+                        "..",
+                        "utils",
+                        "populate_daily_values.py",
+                    ),
+                ]
+                cmd = [os.path.normpath(p) for p in cmd]
+
+                proc = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                )
+                with self._lock:
+                    self._proc = proc
+
+                rc = proc.wait()
+                if rc != 0 and rc is not None:
+                    # Best-effort error: point user to logs.
+                    with self._lock:
+                        self._state.error = (
+                            f"populate_daily_values exited with code {rc}. "
+                            "See logs/utils_populate_daily_values.log for details."
+                        )
             except Exception:
                 with self._lock:
                     self._state.error = traceback.format_exc()
             finally:
+                # If stop was requested, ensure process is gone.
                 with self._lock:
+                    proc = self._proc
+                if proc is not None and proc.poll() is None:
+                    try:
+                        proc.kill()
+                    except Exception:
+                        pass
+
+                with self._lock:
+                    self._proc = None
                     self._state.running = False
                     self._state.ended_at = time.time()
 
