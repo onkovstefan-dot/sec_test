@@ -63,6 +63,60 @@ def _extract_cik_from_link(link: str | None) -> str | None:
     return None
 
 
+def _derive_edgar_urls(
+    *, link: str | None, accession_number: str | None
+) -> tuple[str | None, str | None, str | None]:
+    """Best-effort derivation of index/document/full-text URLs from an Atom entry link.
+
+    Returns (index_url, document_url, full_text_url).
+
+    The SEC Atom feed link may be either an `*-index.htm` page or another file
+    under `/Archives/edgar/data/{cik}/{acc_nodash}/...`.
+
+    We aim to set `document_url` to the submission text (`{acc}.txt`) so that
+    `sec_api_ingest.py` always has something fetchable without needing to parse
+    the index page.
+    """
+
+    if not link:
+        return (None, None, None)
+
+    try:
+        parsed = urlparse(str(link))
+        path = parsed.path or ""
+    except Exception:
+        parsed = None
+        path = str(link)
+
+    acc = str(accession_number).strip().replace("-", "") if accession_number else ""
+    if not acc:
+        # Without accession we cannot construct the canonical .txt.
+        return (str(link), None, None)
+
+    marker = "/Archives/edgar/data/"
+    if marker not in path:
+        # Not an archives link; keep the link but don't guess more.
+        return (str(link), None, None)
+
+    # Canonical under the same directory as the feed link.
+    base_dir = path.rsplit("/", 1)[0]  # /Archives/edgar/data/{cik}/{acc_nodash}
+
+    full_text_path = f"{base_dir}/{acc}.txt"
+    index_path = f"{base_dir}/{acc}-index.htm"
+
+    def _abs(p: str) -> str:
+        if parsed and parsed.scheme and parsed.netloc:
+            return f"{parsed.scheme}://{parsed.netloc}{p}"
+        # Fall back to original string if parsing failed.
+        return str(link)
+
+    full_text_url = _abs(full_text_path)
+    index_url = _abs(index_path)
+
+    # `document_url` is what sec_api_ingest fetches; use the .txt.
+    return (index_url, full_text_url, full_text_url)
+
+
 def parse_atom_entries(atom_bytes: bytes) -> list[dict]:
     """Parse SEC Atom feed into a small normalized entry dict list.
 
@@ -145,19 +199,18 @@ def run_poll(*, session: SASession, url: str, limit: int = 50) -> dict[str, int]
         # Normalize to that format for lookup.
         cik_lookup = str(cik).zfill(10)
 
-        # If the feed gave us the "-index.htm" page, we can derive a sensible
-        # default primary document. For most filings, the full submission text
-        # file exists at:
-        #   .../{acc_nodash}/{acc}-index.htm  (index)
-        #   .../{acc_nodash}/{acc}.txt        (full submission text)
-        # We'll set document_url to the .txt so sec_api_ingest can fetch something
-        # even without parsing the index to locate the "primary" HTML.
-        index_url = str(link) if link else None
-        document_url = None
-        full_text_url = None
-        if index_url and index_url.endswith("-index.htm") and acc:
-            full_text_url = index_url.replace("-index.htm", ".txt")
-            document_url = full_text_url
+        # Derive URLs as best we can. This performs no external calls.
+        index_url, document_url, full_text_url = _derive_edgar_urls(
+            link=str(link) if link else None,
+            accession_number=str(acc) if acc else None,
+        )
+        if acc and not document_url:
+            logger.debug(
+                "Could not derive document_url from feed link | cik=%s acc=%s link=%s",
+                cik_lookup,
+                acc,
+                link,
+            )
 
         ident = (
             session.query(EntityIdentifier)
@@ -166,9 +219,6 @@ def run_poll(*, session: SASession, url: str, limit: int = 50) -> dict[str, int]
         )
         if ident is None:
             unknown += 1
-            # Skip unknown CIKs; do not create placeholder entities/identifiers.
-            # Tests expect unknown issuers to be ignored until the entity registry
-            # contains a matching `sec_cik` identifier.
             continue
 
         if not acc or not form_type:
@@ -200,7 +250,6 @@ def run_poll(*, session: SASession, url: str, limit: int = 50) -> dict[str, int]
     return {
         "inserted": inserted,
         "unknown_cik": unknown,
-        # Backwards-compatible key; no placeholders are created anymore.
         "created_entities": 0,
         "entries": len(entries),
     }

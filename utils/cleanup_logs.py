@@ -62,12 +62,17 @@ def _format_bytes(n: int) -> str:
     return f"{n} B"
 
 
-def _confirm_or_exit(logs_dir: Path, assume_yes: bool) -> None:
+def _confirm_or_exit(logs_dir: Path, assume_yes: bool) -> bool:
+    """Return True if the user confirmed, False if they declined.
+
+    This keeps interactive aborts graceful (no exception traceback).
+    """
+
     if assume_yes:
-        return
+        return True
 
     if not logs_dir.exists():
-        return
+        return True
 
     try:
         file_count = sum(1 for p in logs_dir.rglob("*") if p.is_file())
@@ -75,15 +80,17 @@ def _confirm_or_exit(logs_dir: Path, assume_yes: bool) -> None:
         file_count = 0
 
     resp = input(
-        "\n⚠️  WARNING: This will delete log files in:\n"
+        "\n\u26a0\ufe0f  WARNING: This will delete log files in:\n"
         f"  {logs_dir}\n\n"
         f"Detected files: {file_count}\n\n"
         "Continue? [y/N]: "
     ).strip()
 
     if resp.lower() not in {"y", "yes"}:
-        print("Aborted.")
-        raise SystemExit(1)
+        print("Cleanup aborted.")
+        return False
+
+    return True
 
 
 def cleanup_logs(
@@ -252,7 +259,8 @@ def main(argv: list[str] | None = None) -> int:
 
     # Prompt unless explicitly skipped, and never prompt on dry-run.
     if not args.dry_run:
-        _confirm_or_exit(logs_dir, bool(args.yes))
+        if not _confirm_or_exit(logs_dir, bool(args.yes)):
+            return 0
 
     return cleanup_logs(
         logs_dir=logs_dir,

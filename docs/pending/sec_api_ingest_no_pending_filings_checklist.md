@@ -15,6 +15,11 @@ So the job didn’t crash; it simply had nothing to ingest.
 - Follow-on issue: newly inserted `sec_filings` rows had `document_url` missing → `sec_api_ingest.py` skipped them.
   - Fix: have `sec_rss_poller.py` populate `document_url` (defaults to the accession `.txt`) from the `*-index.htm` link.
 - External fetch failures (HTTP 403) were resolved by setting a compliant `SEC_EDGAR_USER_AGENT`.
+- Re-run recovery: when `pending_total = 0` but `failed > 0`, you can now re-queue a small number of failed rows back to `pending` using `jobs/sec_api_ingest.py --retry-failed`.
+  - This keeps external calls bounded by `--limit` (start low, e.g. 1) while iterating on failures.
+  - Status flips are local DB updates; the external calls only happen when the job subsequently fetches.
+
+<!-- RESOLVED (2026-03-01): Added `--retry-failed` to `jobs/sec_api_ingest.py` to re-queue failed filings when there are no pending filings. -->
 
 ## C) Inspect the DB and explain why nothing is pending (recommended)
 This is the fastest path to root cause.

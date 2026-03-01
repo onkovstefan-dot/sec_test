@@ -173,6 +173,15 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "Default is controlled by SEC_INGEST_DEFAULT_WORKERS (default: 1)."
         ),
     )
+    p.add_argument(
+        "--retry-failed",
+        action="store_true",
+        help=(
+            "If set and no pending filings are selected, re-queue a small number of "
+            "previously failed filings by setting fetch_status back to 'pending' before selecting. "
+            "This is rate-limit friendly when combined with a low --limit."
+        ),
+    )
     # Use parse_known_args so VS Code / other launchers that inject extra args
     # won't break parsing or accidentally get captured as form types.
     args, unknown = p.parse_known_args(argv)
@@ -480,6 +489,36 @@ def _db_ingest_diagnostics(*, session: SASession) -> None:
         logger.debug("DB diagnostics failed", exc_info=True)
 
 
+def _requeue_failed_filings(
+    *, session: SASession, limit: int, form_types: list[str] | None
+) -> int:
+    """Move a limited number of failed filings back to pending.
+
+    Intended to keep external calls bounded while iterating on reliability.
+    """
+
+    q = session.query(SecFiling).filter(SecFiling.fetch_status == "failed")
+    if form_types:
+        q = q.filter(SecFiling.form_type.in_(form_types))
+
+    # Oldest-first so we don't thrash the same recent failures.
+    rows = q.order_by(SecFiling.id.asc()).limit(max(0, int(limit))).all()
+    if not rows:
+        return 0
+
+    for f in rows:
+        f.fetch_status = "pending"
+
+    session.commit()
+    logger.info(
+        "Re-queued failed filings -> pending | count=%s form_types=%s limit=%s",
+        len(rows),
+        form_types,
+        int(limit),
+    )
+    return len(rows)
+
+
 def run_ingest(
     *,
     session: SASession,
@@ -604,6 +643,25 @@ def main(argv: list[str] | None = None) -> None:
                     )
                 except (EOFError, KeyboardInterrupt):
                     raise SystemExit("Aborted.")
+
+            # If nothing is pending and user requested it, re-queue a *small* number
+            # of failed rows and try again. Keep this bounded by --limit.
+            if getattr(args, "retry_failed", False):
+                pending_now = (
+                    s.query(func.count(SecFiling.id))
+                    .filter(
+                        or_(
+                            SecFiling.fetch_status == None,  # noqa: E711
+                            SecFiling.fetch_status == "pending",
+                        )
+                    )
+                    .scalar()
+                    or 0
+                )
+                if int(pending_now) == 0:
+                    _requeue_failed_filings(
+                        session=s, limit=int(args.limit), form_types=form_types
+                    )
 
             summary = run_ingest(
                 session=s,
