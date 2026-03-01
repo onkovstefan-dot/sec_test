@@ -96,6 +96,12 @@ def cleanup_logs(
 ) -> int:
     """Delete log files older than retention period, keeping newest N files.
 
+    Operates recursively over `logs_dir` including all subfolders.
+
+    Notes:
+    - Subfolders are never removed.
+    - Any delete/stat errors are reported and processing continues.
+
     Additionally, if max_total_files is set, delete oldest files until the total
     count is <= max_total_files (after applying keep_newest protection).
     """
@@ -167,23 +173,38 @@ def cleanup_logs(
     if dry_run:
         for c in delete:
             age_days = (now - c.mtime) / 86400
-            print(
-                f"DRY-RUN delete: {c.path.relative_to(PROJECT_ROOT)} (age {age_days:.1f}d)"
-            )
+            try:
+                rel = c.path.relative_to(PROJECT_ROOT)
+            except Exception:
+                rel = c.path
+            print(f"DRY-RUN delete: {rel} (age {age_days:.1f}d)")
         if keep_newest:
             for c in files[:keep_newest]:
-                print(f"DRY-RUN keep (protected): {c.path.relative_to(PROJECT_ROOT)}")
+                try:
+                    rel = c.path.relative_to(PROJECT_ROOT)
+                except Exception:
+                    rel = c.path
+                print(f"DRY-RUN keep (protected): {rel}")
         return 0
 
     deleted = 0
+    errors = 0
     for c in delete:
         try:
             c.path.unlink()
             deleted += 1
         except OSError as e:
+            errors += 1
             print(f"Could not delete {c.path}: {e}", file=sys.stderr)
+        except Exception as e:
+            errors += 1
+            print(f"Unexpected error deleting {c.path}: {e}", file=sys.stderr)
+
+    # Never remove directories; optionally report empty directories is out of scope.
 
     print(f"Deleted {deleted}/{len(delete)} files")
+    if errors:
+        print(f"Encountered {errors} errors while deleting files (continued).")
     return 0 if deleted == len(delete) else 2
 
 
