@@ -284,11 +284,12 @@ def migrate_entity_identifiers_audit_columns(cur: sqlite3.Cursor) -> bool:
     """Add auditability columns to entity_identifiers (idempotent).
 
     - confidence: TEXT NOT NULL DEFAULT 'authoritative'
-    - added_at: DATETIME NOT NULL DEFAULT (UTC timestamp at insert time)
+    - added_at: DATETIME NOT NULL DEFAULT '1970-01-01 00:00:00'
     - last_seen_at: DATETIME NULL
 
-    Note: SQLite cannot use Python callables as DEFAULTs in ALTER TABLE.
-    We use SQLite's CURRENT_TIMESTAMP which is UTC.
+    Note: SQLite cannot use Python callables as DEFAULTs in ALTER TABLE,
+    and also cannot use CURRENT_TIMESTAMP in ALTER TABLE ADD COLUMN.
+    We use a static default like '1970-01-01 00:00:00'.
     """
 
     changed = False
@@ -302,7 +303,7 @@ def migrate_entity_identifiers_audit_columns(cur: sqlite3.Cursor) -> bool:
         cur,
         "entity_identifiers",
         "added_at",
-        "DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP)",
+        "DATETIME NOT NULL DEFAULT '1970-01-01 00:00:00'",
     )
     changed |= add_column_if_missing(
         cur,
