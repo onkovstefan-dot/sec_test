@@ -21,6 +21,17 @@ logger = get_logger(__name__)
 RAW_DATA_DIR = Path(__file__).resolve().parents[1] / "raw_data"
 FORMS_DIR = RAW_DATA_DIR / "forms"
 
+# A curated, common set for quick interactive selection.
+SUGGESTED_FORM_TYPES: list[str] = [
+    "10-K",
+    "10-Q",
+    "8-K",
+    "S-1",
+    "DEF 14A",
+    "13F-HR",
+    "4",
+]
+
 
 @dataclass(frozen=True)
 class IngestResult:
@@ -36,7 +47,10 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument(
         "--form-types",
         default=None,
-        help="Comma-separated list of SEC form types to include (e.g. '10-K,8-K'). If omitted, includes all.",
+        help=(
+            "Comma-separated list of SEC form types to include (e.g. '10-K,8-K'). "
+            "If omitted, the script will offer an interactive selection menu."
+        ),
     )
     p.add_argument(
         "--limit",
@@ -51,6 +65,58 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Concurrent download workers (threads) (default: 4)",
     )
     return p.parse_args(argv)
+
+
+def _parse_csv_list(value: str | None) -> list[str] | None:
+    if not value:
+        return None
+    items = [t.strip() for t in str(value).split(",")]
+    items = [t for t in items if t]
+    return items or None
+
+
+def _prompt_form_types_interactive() -> list[str] | None:
+    """Prompt for `form_types` when user didn't pass `--form-types`.
+
+    Returns:
+      - list[str] for a chosen subset
+      - None to include all form types
+    """
+
+    print("\nSelect SEC form types to ingest:")
+    print("  0) All form types (no filter)")
+    for i, ft in enumerate(SUGGESTED_FORM_TYPES, start=1):
+        print(f"  {i}) {ft}")
+    print("\nEnter one or more numbers (comma-separated). Examples: 1 or 1,3,4")
+    print("Or type a custom comma-separated list (e.g. 10-K,8-K).")
+    raw = input("Selection [0]: ").strip()
+
+    if raw == "" or raw == "0":
+        return None
+
+    # If it's purely numeric selections, map them.
+    parts = [p.strip() for p in raw.split(",") if p.strip()]
+    if parts and all(p.isdigit() for p in parts):
+        selected: list[str] = []
+        for p in parts:
+            n = int(p)
+            if n == 0:
+                return None
+            idx = n - 1
+            if idx < 0 or idx >= len(SUGGESTED_FORM_TYPES):
+                raise SystemExit(f"Invalid selection: {n}")
+            selected.append(SUGGESTED_FORM_TYPES[idx])
+        # de-dupe while preserving order
+        out: list[str] = []
+        seen: set[str] = set()
+        for t in selected:
+            if t not in seen:
+                out.append(t)
+                seen.add(t)
+        return out or None
+
+    # Otherwise treat input as a normal CSV list of form types.
+    return _parse_csv_list(raw)
 
 
 def _normalize_accession(accession: str) -> str:
@@ -183,9 +249,13 @@ def run_ingest(
 def main(argv: list[str] | None = None) -> None:
     args = _parse_args(argv)
 
-    form_types = None
-    if args.form_types:
-        form_types = [t.strip() for t in str(args.form_types).split(",") if t.strip()]
+    # Use CLI arg when provided; otherwise offer a simple interactive choice.
+    form_types: list[str] | None = _parse_csv_list(args.form_types)
+    if form_types is None and not args.form_types:
+        try:
+            form_types = _prompt_form_types_interactive()
+        except (EOFError, KeyboardInterrupt):
+            raise SystemExit("Aborted.")
 
     Base.metadata.create_all(bind=engine)
 
