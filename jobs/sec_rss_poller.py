@@ -166,37 +166,10 @@ def run_poll(*, session: SASession, url: str, limit: int = 50) -> dict[str, int]
         )
         if ident is None:
             unknown += 1
-            # Create a minimal placeholder entity so we can still queue filings.
-            # This keeps the pipeline moving even if the entity registry isn't
-            # populated for a newly-seen CIK.
-            ent = Entity(cik=cik_lookup)
-            session.add(ent)
-            try:
-                session.flush()  # assign ent.id
-                ident = EntityIdentifier(
-                    entity_id=ent.id, scheme="sec_cik", value=cik_lookup
-                )
-                session.add(ident)
-                session.flush()
-                created_entities += 1
-                logger.info(
-                    "RSS poller: created placeholder entity for CIK=%s", cik_lookup
-                )
-            except Exception:
-                # If another process inserted the identifier (or a previous partial
-                # run did), re-query and continue without crashing.
-                session.rollback()
-                ident = (
-                    session.query(EntityIdentifier)
-                    .filter_by(scheme="sec_cik", value=cik_lookup)
-                    .first()
-                )
-                if ident is None:
-                    logger.exception(
-                        "RSS poller: failed to create/lookup identifier for CIK=%s",
-                        cik_lookup,
-                    )
-                    continue
+            # Skip unknown CIKs; do not create placeholder entities/identifiers.
+            # Tests expect unknown issuers to be ignored until the entity registry
+            # contains a matching `sec_cik` identifier.
+            continue
 
         if not acc or not form_type:
             continue
@@ -227,7 +200,8 @@ def run_poll(*, session: SASession, url: str, limit: int = 50) -> dict[str, int]
     return {
         "inserted": inserted,
         "unknown_cik": unknown,
-        "created_entities": created_entities,
+        # Backwards-compatible key; no placeholders are created anymore.
+        "created_entities": 0,
         "entries": len(entries),
     }
 
