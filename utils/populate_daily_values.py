@@ -154,10 +154,36 @@ def timed(
 
 
 # Default process-sharding configuration.
-# Note: this script does not spawn processes itself; you still need to start N OS
-# processes with --worker-index 0..N-1. This constant is just the default value
-# used when --workers isn't provided.
-DEFAULT_WORKERS = 1
+#
+# Priority when choosing worker count:
+#   1) CLI arg --workers (if provided)
+#   2) DEFAULT_WORKERS (if > 0)
+#   3) Dynamic calculation (if DEFAULT_WORKERS <= 0)
+#
+# Set this to <= 0 to auto-pick based on available CPUs.
+DEFAULT_WORKERS = 4
+
+
+def _dynamic_default_workers() -> int:
+    """Compute a safe default worker count from OS/hardware."""
+    cpu = os.cpu_count() or 1
+    # Avoid spinning up absurd numbers of processes by default.
+    return max(1, min(int(cpu), 8))
+
+
+def _resolve_workers(cli_workers: int | None) -> int:
+    """Resolve the effective worker count based on CLI/constant/dynamic fallback."""
+    if cli_workers is not None:
+        workers = int(cli_workers)
+    elif DEFAULT_WORKERS > 0:
+        workers = int(DEFAULT_WORKERS)
+    else:
+        workers = _dynamic_default_workers()
+
+    if workers <= 0:
+        raise SystemExit("--workers must be a positive integer")
+    return workers
+
 
 # Internal-only flag used when this module spawns its own worker processes.
 INTERNAL_ARG_WORKER_INDEX = "--_worker-index"
@@ -1270,9 +1296,7 @@ def _run_worker_process(*, workers: int, worker_index: int, db_path: str) -> Non
 def main(argv: list[str] | None = None) -> None:
     args = _parse_args(argv)
 
-    workers = DEFAULT_WORKERS if args.workers is None else int(args.workers)
-    if workers <= 0:
-        raise SystemExit("--workers must be a positive integer")
+    workers = _resolve_workers(args.workers)
 
     # If this is a spawned worker process, run only that shard.
     if getattr(args, "_worker_index", None) is not None:
