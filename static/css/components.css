@@ -68,3 +68,84 @@
     color: var(--muted, #6b7280);
     font-size: 0.95em;
 }
+
+/* Global loading overlay */
+.global-loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.global-loading.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.global-loading__inner {
+    margin: 0.6rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(15, 52, 96, 0.95);
+    color: #fff;
+    font-size: 0.92rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
+
+.global-loading__spinner {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    animation: gl-spin 900ms linear infinite;
+}
+
+@keyframes gl-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .global-loading {
+        transition: none;
+    }
+
+    .global-loading__spinner {
+        animation: none;
+    }
+}
+
+/* Disable interactions while loading */
+body.is-loading {
+    cursor: progress;
+}
+
+body.is-loading a,
+body.is-loading button,
+body.is-loading input,
+body.is-loading select,
+body.is-loading textarea {
+    cursor: progress;
+}
+
+body.is-loading::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    /* just under .global-loading (9999) */
+    background: transparent;
+    pointer-events: all;
+}

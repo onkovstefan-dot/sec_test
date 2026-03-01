@@ -11,12 +11,20 @@
 </head>
 
 <body>
+    <div id="global-loading" class="global-loading" aria-hidden="true">
+        <div class="global-loading__inner" role="status" aria-live="polite">
+            <span class="global-loading__spinner" aria-hidden="true"></span>
+            <span>Loading…</span>
+        </div>
+    </div>
+
     {% include 'components/navbar.html' %}
 
     <main class="container">
         {% block content %}{% endblock %}
     </main>
 
+    <script src="{{ url_for('static', filename='js/global_loading.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 
