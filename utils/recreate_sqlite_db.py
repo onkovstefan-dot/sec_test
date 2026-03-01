@@ -1,15 +1,21 @@
 """Delete and recreate the local SQLite DB.
 
 This is a destructive helper for local development.
-It removes `data/sec.db` and recreates all tables from SQLAlchemy models.
 
-Why: SQLite doesn't auto-migrate when models change (e.g. new `units` table,
-new `value_names.unit_id`, new metadata fields).
+Default behavior (recommended):
+- Delete `data/sec.db` (and any `-wal`/`-shm` files)
+- Optionally create a timestamped backup
+- Exit without recreating tables
+
+The app will recreate tables from SQLAlchemy models on startup.
+
+Why: SQLite doesn't auto-migrate when models change.
 
 Usage:
-    python utils/recreate_sqlite_db.py          # with confirmation prompt
-    python utils/recreate_sqlite_db.py --yes    # skip confirmation
-    python utils/recreate_sqlite_db.py --backup # create backup before reset
+    python utils/recreate_sqlite_db.py                 # with confirmation prompt
+    python utils/recreate_sqlite_db.py --yes           # skip confirmation
+    python utils/recreate_sqlite_db.py --backup        # create backup before reset
+    python utils/recreate_sqlite_db.py --recreate-now  # also recreate tables immediately
 """
 
 from __future__ import annotations
@@ -32,6 +38,7 @@ from models import Base
 import models.daily_values  # noqa: F401
 import models.dates  # noqa: F401
 import models.entities  # noqa: F401
+import models.entity_identifiers  # noqa: F401
 import models.entity_metadata  # noqa: F401
 import models.file_processing  # noqa: F401
 import models.units  # noqa: F401
@@ -51,7 +58,7 @@ def _confirm_or_exit(db_path: str, assume_yes: bool) -> None:
         print(f"\n⚠️  WARNING: Database exists ({size_mb:.2f} MB)")
 
     resp = input(
-        f"\nThis will DROP and RECREATE ALL TABLES in:\n  {db_path}\n\n"
+        f"\nThis will DELETE the SQLite database file (and ALL DATA) at:\n  {db_path}\n\n"
         "⚠️  ALL DATA WILL BE LOST!\n\n"
         "Continue? [y/N]: "
     ).strip()
@@ -101,9 +108,24 @@ def _show_existing_tables(db_path: str) -> None:
         print(f"Could not inspect database: {e}")
 
 
+def _delete_sqlite_files(db_path: str) -> None:
+    """Delete the main sqlite file and associated WAL/SHM files if present."""
+    for suffix in ("", "-wal", "-shm"):
+        p = db_path + suffix
+        if os.path.exists(p):
+            try:
+                os.remove(p)
+                print(f"🗑️  Deleted: {p}")
+            except OSError as e:
+                print(f"⚠️  Could not delete {p}: {e}")
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
-        description="Reset the local SQLite database by dropping and recreating all tables."
+        description=(
+            "Reset the local SQLite database by deleting the DB file (recommended). "
+            "The app will recreate tables from models on startup."
+        )
     )
     parser.add_argument(
         "--yes",
@@ -115,7 +137,12 @@ def main(argv: list[str] | None = None) -> None:
         "--backup",
         "-b",
         action="store_true",
-        help="Create a timestamped backup before resetting.",
+        help="Create a timestamped backup before deleting.",
+    )
+    parser.add_argument(
+        "--recreate-now",
+        action="store_true",
+        help="Also recreate tables immediately after deletion (legacy behavior).",
     )
     args = parser.parse_args(argv)
 
@@ -130,38 +157,20 @@ def main(argv: list[str] | None = None) -> None:
     if args.backup:
         _create_backup(DB_PATH)
 
-    # If a previous process crashed, these can linger and block writes.
-    for suffix in ("-wal", "-shm"):
-        p = DB_PATH + suffix
-        if os.path.exists(p):
-            try:
-                os.remove(p)
-            except OSError:
-                # Not fatal; SQLite can usually regenerate them.
-                pass
+    print("\n🗑️  Deleting SQLite database files...")
+    _delete_sqlite_files(DB_PATH)
 
+    if not args.recreate_now:
+        print("\n✓ Database deleted.")
+        print("Next step: start the app; it will recreate tables from the models.")
+        print(f"Database location: {DB_PATH}")
+        return
+
+    # Optional legacy behavior: recreate tables now.
     engine = create_engine(f"sqlite:///{DB_PATH}")
-
-    # Try to drop all tables gracefully
-    print("\n🔄 Dropping all tables...")
-    try:
-        Base.metadata.drop_all(engine)
-    except Exception as e:
-        print(f"⚠️  Could not drop tables gracefully: {e}")
-        print("🗑️  Deleting database file and recreating from scratch...")
-        engine.dispose()
-
-        # Remove the database file entirely
-        if os.path.exists(DB_PATH):
-            os.remove(DB_PATH)
-
-        # Recreate engine with fresh database
-        engine = create_engine(f"sqlite:///{DB_PATH}")
-
-    print("🔨 Recreating all tables from models...")
+    print("\n🔨 Recreating all tables from models...")
     Base.metadata.create_all(engine)
 
-    # Show new tables
     print("\n✓ Database reset complete!")
     inspector = inspect(engine)
     tables = inspector.get_table_names()

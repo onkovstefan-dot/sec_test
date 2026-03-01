@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from models.daily_values import DailyValue
 from models.dates import DateEntry
 from models.entities import Entity
+from models.entity_identifiers import EntityIdentifier
 from models.units import Unit
 from models.value_names import ValueName
 
@@ -33,7 +34,7 @@ def list_entities_with_daily_values(session: Session) -> List[Entity]:
         session.query(Entity)
         .join(DailyValue, DailyValue.entity_id == Entity.id)
         .distinct()
-        .order_by(Entity.cik)
+        .order_by(func.coalesce(Entity.cik, ""), Entity.id)
         .all()
     )
 
@@ -65,7 +66,7 @@ def list_entities_with_daily_values_page(
         session.query(Entity)
         .join(DailyValue, DailyValue.entity_id == Entity.id)
         .distinct()
-        .order_by(Entity.cik)
+        .order_by(func.coalesce(Entity.cik, ""), Entity.id)
         .offset(offset)
         .limit(limit)
         .all()
@@ -73,10 +74,28 @@ def list_entities_with_daily_values_page(
 
 
 def get_entity_by_cik(session: Session, cik: str) -> Optional[Entity]:
-    """Lookup entity by normalized CIK."""
+    """Lookup entity by normalized CIK.
+
+    Strict matching uses `entity_identifiers`.
+
+    Compatibility: legacy code/tests may only populate `entities.cik`.
+    In that case, fall back to matching on `Entity.cik` directly.
+    """
     norm = normalize_cik(cik)
     if not norm:
         return None
+
+    entity = (
+        session.query(Entity)
+        .join(EntityIdentifier, EntityIdentifier.entity_id == Entity.id)
+        .filter(EntityIdentifier.scheme == "sec_cik")
+        .filter(EntityIdentifier.value == norm)
+        .first()
+    )
+    if entity is not None:
+        return entity
+
+    # Legacy fallback (non-strict) for older DBs/tests.
     return session.query(Entity).filter(Entity.cik == norm).first()
 
 

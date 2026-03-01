@@ -65,7 +65,10 @@ from models.entity_metadata import EntityMetadata
 from models.file_processing import FileProcessing
 from models.units import Unit
 from models.value_names import ValueName
+from models.entity_identifiers import EntityIdentifier
 from utils.time_utils import parse_ymd_date, utcnow
+
+import uuid
 
 
 def _ts_now() -> str:
@@ -345,6 +348,175 @@ def _insert_daily_value_ignore(
     return bool(getattr(res, "rowcount", 0))
 
 
+def _normalize_identifier_value(scheme: str, value: str) -> str:
+    """Normalize identifier values for consistent strict matching."""
+    v = (value or "").strip()
+    if not v:
+        return v
+
+    scheme_l = (scheme or "").strip().lower()
+
+    if scheme_l in {"sec_cik", "cik"}:
+        # store CIK as 10-digit zero padded
+        n = _normalize_cik(v)
+        return n or v
+
+    if scheme_l in {"gleif_lei", "lei"}:
+        return v.upper()
+
+    # Default: trim only.
+    return v
+
+
+def _scheme_alias(scheme: str) -> str:
+    """Map common aliases onto canonical scheme names."""
+    s = (scheme or "").strip().lower()
+    if s in {"cik", "sec", "sec-cik", "sec_cik"}:
+        return "sec_cik"
+    if s in {"lei", "gleif", "gleif-lei", "gleif_lei"}:
+        return "gleif_lei"
+    return s
+
+
+def _get_or_create_entity_identifier(
+    session: SASession,
+    *,
+    entity_id: int,
+    scheme: str,
+    value: str,
+    country: str | None = None,
+    issuer: str | None = None,
+) -> EntityIdentifier:
+    scheme_n = _scheme_alias(scheme)
+    value_n = _normalize_identifier_value(scheme_n, value)
+
+    with session.no_autoflush:
+        existing = (
+            session.query(EntityIdentifier)
+            .filter_by(scheme=scheme_n, value=value_n)
+            .first()
+        )
+    if existing:
+        # If it already exists but points elsewhere, keep strictness and surface conflict.
+        if existing.entity_id != entity_id:
+            raise IntegrityError(
+                f"Identifier conflict: {scheme_n}:{value_n} already belongs to entity_id={existing.entity_id}",
+                params=None,
+                orig=None,
+            )
+        return existing
+
+    ident = EntityIdentifier(
+        entity_id=entity_id,
+        scheme=scheme_n,
+        value=value_n,
+        country=country,
+        issuer=issuer,
+    )
+    session.add(ident)
+    session.flush()
+    return ident
+
+
+def get_or_create_entity_by_identifier(
+    *,
+    scheme: str,
+    value: str,
+    session: SASession | None = None,
+    country: str | None = None,
+    issuer: str | None = None,
+    create_if_missing: bool = True,
+) -> Entity:
+    """Resolve an Entity via a strict external identifier, creating if missing.
+
+    This is the preferred entry-point for strict matching across heterogeneous
+    sources.
+
+    Matching rules:
+    - Identifiers are normalized based on `scheme`.
+    - The `entity_identifiers` table enforces uniqueness on (scheme, value).
+
+    Args:
+        scheme: Canonical identifier scheme (e.g. 'sec_cik', 'gleif_lei').
+        value: Raw identifier value.
+        country: Optional country context to record.
+        issuer: Optional issuer context to record.
+        create_if_missing: If False, raises LookupError when identifier not found.
+
+    Returns:
+        Entity
+
+    Raises:
+        LookupError: if create_if_missing is False and identifier doesn't exist.
+        IntegrityError: if an identifier conflict is detected.
+    """
+
+    session = _default_session(session)
+
+    scheme_n = _scheme_alias(scheme)
+    value_n = _normalize_identifier_value(scheme_n, value)
+    if not scheme_n or not value_n:
+        raise ValueError("scheme and value must be non-empty")
+
+    with session.no_autoflush:
+        ident = (
+            session.query(EntityIdentifier)
+            .filter_by(scheme=scheme_n, value=value_n)
+            .first()
+        )
+
+    if ident is not None:
+        with session.no_autoflush:
+            entity = session.query(Entity).filter_by(id=ident.entity_id).first()
+        if entity is None:
+            # DB inconsistency; fail loudly.
+            raise LookupError(
+                f"Orphan entity_identifiers row: {scheme_n}:{value_n} -> entity_id={ident.entity_id}"
+            )
+
+        # Backfill canonical UUID if this is an older row.
+        if not getattr(entity, "canonical_uuid", None):
+            entity.canonical_uuid = str(uuid.uuid4())
+            session.flush()
+
+        # Optionally backfill context.
+        changed = False
+        if country and not ident.country:
+            ident.country = country
+            changed = True
+        if issuer and not ident.issuer:
+            ident.issuer = issuer
+            changed = True
+        if changed:
+            session.flush()
+
+        return entity
+
+    if not create_if_missing:
+        raise LookupError(f"No entity found for identifier {scheme_n}:{value_n}")
+
+    # Create entity + identifier atomically inside caller's transaction.
+    entity = Entity(canonical_uuid=str(uuid.uuid4()))
+
+    # Keep legacy convenience field populated when available.
+    if scheme_n == "sec_cik":
+        entity.cik = value_n
+
+    session.add(entity)
+    session.flush()
+
+    _get_or_create_entity_identifier(
+        session,
+        entity_id=entity.id,
+        scheme=scheme_n,
+        value=value_n,
+        country=country,
+        issuer=issuer,
+    )
+
+    return entity
+
+
 def get_or_create_entity(
     cik,
     company_name: str | None = None,
@@ -354,6 +526,10 @@ def get_or_create_entity(
     session = _default_session(session)
     """Get an `Entity` by CIK or create it.
 
+    Additionally:
+    - Ensures `entities.canonical_uuid` is set.
+    - Ensures an `entity_identifiers` row exists for the SEC CIK.
+
     Optimized: avoids committing inside helper; caller controls transaction.
     Also backfills `entity_metadata` fields when provided.
 
@@ -362,12 +538,19 @@ def get_or_create_entity(
         company_name: Company name (legacy parameter, also in metadata dict)
         metadata: Dict of metadata fields to populate in entity_metadata table
     """
-    with session.no_autoflush:
-        entity = session.query(Entity).filter_by(cik=cik).first()
-    if not entity:
-        entity = Entity(cik=cik)
-        session.add(entity)
-        session.flush()  # assign PK without committing
+
+    cik10 = _normalize_cik(cik)
+    if not cik10:
+        raise ValueError(f"Invalid CIK: {cik!r}")
+
+    entity = get_or_create_entity_by_identifier(
+        scheme="sec_cik",
+        value=cik10,
+        session=session,
+        country="US",
+        issuer="sec",
+        create_if_missing=True,
+    )
 
     # Create/backfill metadata (1:1)
     if company_name or metadata:

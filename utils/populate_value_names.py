@@ -17,6 +17,8 @@ from models.entities import Entity
 from models.entity_metadata import EntityMetadata
 from models.units import Unit
 from models.value_names import ValueName
+from models.entity_identifiers import EntityIdentifier
+import uuid
 
 # Ensure all tables are registered on Base.metadata
 import models.daily_values  # noqa: F401
@@ -27,9 +29,17 @@ SUBMISSIONS_DIR = os.path.join(RAW_DATA_DIR, "submissions")
 COMPANYFACTS_DIR = os.path.join(RAW_DATA_DIR, "companyfacts")
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "sec.db")
 
-engine = create_engine(f"sqlite:///{DB_PATH}")
-Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
+engine = None
+Session = None
+
+
+def _init_db_globals(db_path: str = DB_PATH):
+    global engine, Session
+    if engine is not None and Session is not None:
+        return
+    engine = create_engine(f"sqlite:///{db_path}")
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
 
 
 def _normalize_cik(raw) -> str | None:
@@ -58,8 +68,32 @@ def _get_or_create_entity(session, cik10: str, company_name: str | None = None) 
     with session.no_autoflush:
         row = session.query(Entity).filter_by(cik=cik10).first()
     if not row:
-        row = Entity(cik=cik10)
+        row = Entity(cik=cik10, canonical_uuid=str(uuid.uuid4()))
         session.add(row)
+        session.flush()
+
+    # Backfill canonical uuid if needed.
+    if not getattr(row, "canonical_uuid", None):
+        row.canonical_uuid = str(uuid.uuid4())
+        session.flush()
+
+    # Ensure strict identifier row exists.
+    with session.no_autoflush:
+        ident = (
+            session.query(EntityIdentifier)
+            .filter_by(scheme="sec_cik", value=cik10)
+            .first()
+        )
+    if not ident:
+        session.add(
+            EntityIdentifier(
+                entity_id=row.id,
+                scheme="sec_cik",
+                value=cik10,
+                country="US",
+                issuer="sec",
+            )
+        )
         session.flush()
 
     if company_name:
@@ -250,6 +284,8 @@ def _process_companyfacts(session) -> dict[str, int]:
 
 
 def main() -> None:
+    _init_db_globals()
+    assert Session is not None
     session = Session()
     try:
         # Use a single transaction for speed; data is idempotent (get-or-create).
@@ -271,4 +307,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
