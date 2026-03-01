@@ -38,6 +38,7 @@ import os
 # Allow running as standalone script
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+import argparse
 import json
 import logging
 import threading
@@ -47,9 +48,10 @@ from datetime import datetime
 from functools import wraps
 from time import perf_counter
 
-from sqlalchemy import create_engine, func
+from sqlalchemy import create_engine, func, text
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session as SASession
 from sqlalchemy.orm import sessionmaker
 
 from logging_utils import get_logger
@@ -158,10 +160,75 @@ RAW_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "raw_dat
 COMPANYFACTS_DIR = os.path.join(RAW_DATA_DIR, "companyfacts")
 SUBMISSIONS_DIR = os.path.join(RAW_DATA_DIR, "submissions")
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "sec.db")
-engine = create_engine(f"sqlite:///{DB_PATH}")
-Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
-session = Session()
+
+
+# Backwards-compatible globals (used by unit tests and existing callers).
+# NOTE: Multi-process mode uses its own per-process engine/session created in `_run()`.
+engine = None
+Session = None
+session: SASession | None = None
+
+
+def _init_default_db_globals() -> None:
+    global engine, Session, session
+    if engine is not None and Session is not None and session is not None:
+        return
+    engine = _make_engine(DB_PATH)
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine, future=True)
+    session = Session()
+
+
+def _default_session(provided: SASession | None) -> SASession:
+    """Return provided session or fall back to the module-level session.
+
+    This keeps compatibility with unit tests that monkeypatch `utils.populate_daily_values.session`.
+    """
+    if provided is not None:
+        return provided
+    _init_default_db_globals()
+    assert session is not None
+    return session
+
+
+def _make_engine(db_path: str):
+    """Create a SQLite engine with safer defaults for concurrent writers."""
+    # `check_same_thread=False` is important because SQLAlchemy may use connection
+    # pool internals that otherwise trip SQLite thread checks.
+    #
+    # For multi-process, each process has its own engine anyway.
+    eng = create_engine(
+        f"sqlite:///{db_path}",
+        connect_args={"check_same_thread": False, "timeout": 30},
+        pool_pre_ping=True,
+    )
+    return eng
+
+
+def _configure_sqlite_for_concurrency(session: SASession) -> None:
+    """Apply PRAGMAs that reduce 'database is locked' risk."""
+    try:
+        session.execute(text("PRAGMA journal_mode=WAL;"))
+        session.execute(text("PRAGMA synchronous=NORMAL;"))
+        session.execute(text("PRAGMA busy_timeout=30000;"))
+    except Exception:
+        # Not fatal; continue with defaults.
+        pass
+
+
+def _chunked_files(
+    files: list[tuple[str, str, str]], *, workers: int, worker_index: int
+) -> list[tuple[str, str, str]]:
+    """Deterministically shard a sorted file list across workers.
+
+    Sharding by index (round-robin) avoids giving one worker all large files if the list
+    is grouped by folder.
+    """
+    if workers <= 1:
+        return files
+    if worker_index < 0 or worker_index >= workers:
+        raise ValueError("worker_index must be in [0, workers)")
+    return [t for i, t in enumerate(files) if (i % workers) == worker_index]
 
 
 def _safe_str(val, max_len: int = 4000) -> str:
@@ -179,7 +246,10 @@ def _safe_str(val, max_len: int = 4000) -> str:
     return s[:max_len]
 
 
-def _insert_daily_values_ignore_bulk(rows: list[dict]) -> int:
+def _insert_daily_values_ignore_bulk(
+    session: SASession | None, rows: list[dict]
+) -> int:
+    session = _default_session(session)
     """Bulk insert daily_values rows using SQLite INSERT OR IGNORE.
 
     SQLite enforces a limit on the number of bound parameters per statement
@@ -203,6 +273,8 @@ def _insert_daily_values_ignore_bulk(rows: list[dict]) -> int:
         chunk = rows[i : i + max_rows_per_chunk]
         stmt = sqlite_insert(DailyValue).values(chunk).prefix_with("OR IGNORE")
         res = session.execute(stmt)
+        # Ensure SQLite has actually executed the INSERT so rowcount is accurate.
+        session.flush()
         inserted += int(getattr(res, "rowcount", 0) or 0)
 
     return inserted
@@ -210,8 +282,13 @@ def _insert_daily_values_ignore_bulk(rows: list[dict]) -> int:
 
 # Keep the single-row helper for potential future/diagnostics use.
 def _insert_daily_value_ignore(
-    entity_id: int, date_id: int, value_name_id: int, value: str
+    session: SASession | None,
+    entity_id: int,
+    date_id: int,
+    value_name_id: int,
+    value: str,
 ) -> bool:
+    session = _default_session(session)
     """Insert into daily_values, ignoring unique-constraint duplicates.
 
     Returns True if inserted, False if ignored as duplicate.
@@ -232,8 +309,12 @@ def _insert_daily_value_ignore(
 
 
 def get_or_create_entity(
-    cik, company_name: str | None = None, metadata: dict | None = None
+    cik,
+    company_name: str | None = None,
+    metadata: dict | None = None,
+    session: SASession | None = None,
 ):
+    session = _default_session(session)
     """Get an `Entity` by CIK or create it.
 
     Optimized: avoids committing inside helper; caller controls transaction.
@@ -274,7 +355,8 @@ def get_or_create_entity(
     return entity
 
 
-def get_or_create_unit(name: str | None):
+def get_or_create_unit(name: str | None, session: SASession | None = None):
+    session = _default_session(session)
     """Get a `Unit` by name or create it.
 
     Optimized: avoids committing inside helper; caller controls transaction.
@@ -289,7 +371,10 @@ def get_or_create_unit(name: str | None):
     return unit
 
 
-def get_or_create_value_name(name, unit_id: int | None = None):
+def get_or_create_value_name(
+    name, unit_id: int | None = None, session: SASession | None = None
+):
+    session = _default_session(session)
     """Get a `ValueName` by SEC concept name or create it.
 
     Optimized: avoids committing inside helper; caller controls transaction.
@@ -315,7 +400,8 @@ def get_or_create_value_name(name, unit_id: int | None = None):
     return value_name
 
 
-def get_or_create_date_entry(date_str):
+def get_or_create_date_entry(date_str, session: SASession | None = None):
+    session = _default_session(session)
     """Get a `DateEntry` by `YYYY-MM-DD` string or create it.
 
     Optimized: avoids committing inside helper; caller controls transaction.
@@ -335,7 +421,8 @@ def get_or_create_date_entry(date_str):
     return date_entry
 
 
-def delete_all_daily_values():
+def delete_all_daily_values(session: SASession | None = None):
+    session = _default_session(session)
     """Delete all rows from `daily_values`.
 
     Intended as a one-off helper during development/troubleshooting.
@@ -674,7 +761,9 @@ def process_companyfacts_file(
     get_unit_id_cached,
     get_value_name_id_cached,
     get_date_id_cached,
+    session: SASession | None = None,
 ) -> tuple[int, int]:
+    session = _default_session(session)
     """Process a single companyfacts JSON payload.
 
     Optimized: batch INSERT OR IGNORE into daily_values per file.
@@ -704,7 +793,7 @@ def process_companyfacts_file(
             )
         )
 
-    inserted = _insert_daily_values_ignore_bulk(rows)
+    inserted = _insert_daily_values_ignore_bulk(session, rows)
     duplicates = max(inserts_planned - inserted, 0)
     return inserts_planned, duplicates
 
@@ -719,7 +808,9 @@ def process_submissions_file(
     get_unit_id_cached,
     get_value_name_id_cached,
     get_date_id_cached,
+    session: SASession | None = None,
 ) -> tuple[str, int, int, str | None]:
+    session = _default_session(session)
     """Process a single submissions JSON payload.
 
     Optimized: batch INSERT OR IGNORE into daily_values per file.
@@ -763,7 +854,7 @@ def process_submissions_file(
             )
         )
 
-    inserted = _insert_daily_values_ignore_bulk(rows)
+    inserted = _insert_daily_values_ignore_bulk(session, rows)
     duplicates = max(inserts_planned - inserted, 0)
 
     return schema, inserts_planned, duplicates, None
@@ -795,7 +886,10 @@ def _source_file_key(source: str, rel_path: str) -> str:
     return f"{source}:{rel_path}"
 
 
-def _mark_file_processed(entity_id: int, source_file: str) -> None:
+def _mark_file_processed(
+    session: SASession | None, entity_id: int, source_file: str
+) -> None:
+    session = _default_session(session)
     """Insert a processed marker row (idempotent)."""
     stmt = (
         sqlite_insert(FileProcessing)
@@ -805,7 +899,8 @@ def _mark_file_processed(entity_id: int, source_file: str) -> None:
     session.execute(stmt)
 
 
-def _load_processed_file_keys() -> set[str]:
+def _load_processed_file_keys(session: SASession | None = None) -> set[str]:
+    session = _default_session(session)
     """Load processed file keys into memory for fast skipping."""
     try:
         rows = session.query(FileProcessing.source_file).all()
@@ -816,182 +911,189 @@ def _load_processed_file_keys() -> set[str]:
         return set()
 
 
-@timed("main", logger_obj=logger)
-def main():
-    """Entry point: discover JSON files, process them, and write summary logs."""
-    with timed_block("populate_daily_values total", logger_obj=logger):
-        # Discover all JSON files under raw_data recursively.
-        files = discover_json_files(RAW_DATA_DIR)
+def _run(
+    *,
+    workers: int = 1,
+    worker_index: int = 0,
+    db_path: str = DB_PATH,
+) -> None:
+    """Run a single worker (process) over its deterministic shard of files."""
 
-        # Incremental run support: skip files already recorded as processed.
-        processed = _load_processed_file_keys()
+    engine = _make_engine(db_path)
+    Base.metadata.create_all(engine)
+    SessionLocal = sessionmaker(bind=engine, future=True)
 
-        total_files = len(files)
-        error_files: list[str] = []
+    with SessionLocal() as session:
+        _configure_sqlite_for_concurrency(session)
+        session.commit()
 
-        total_successful_inserts = 0
-        total_duplicates = 0
+        with timed_block("populate_daily_values total", logger_obj=logger):
+            files = discover_json_files(RAW_DATA_DIR)
 
-        # Explain upfront whether we'll skip already-processed files.
-        if processed:
-            print(
-                f"Starting processing of {total_files} files. Incremental mode: "
-                f"will skip {len(processed)} previously-processed files."
-            )
-        else:
-            print(
-                f"Starting processing of {total_files} files. No previously-processed files to skip."
-            )
-        logger.info(f"Starting processing of {total_files} files.")
+            # Deterministic ordering + deterministic sharding reduces overlap and makes
+            # reruns/debugging easier.
+            files = sorted(files, key=lambda t: (t[0], t[1], t[2]))
+            files = _chunked_files(files, workers=workers, worker_index=worker_index)
 
-        if processed:
+            processed = _load_processed_file_keys(session)
+
+            total_files = len(files)
+            error_files: list[str] = []
+
+            total_successful_inserts = 0
+            total_duplicates = 0
+
             logger.info(
-                "Incremental mode: %s files already processed; will skip.",
+                "Worker %s/%s starting. Assigned files=%s (processed set size=%s)",
+                worker_index + 1,
+                workers,
+                total_files,
                 len(processed),
             )
 
-        skip_reasons = Counter()
-        error_reasons = Counter()
-        skip_reason_samples: dict[str, list[str]] = defaultdict(list)
+            skip_reasons = Counter()
+            error_reasons = Counter()
+            skip_reason_samples: dict[str, list[str]] = defaultdict(list)
 
-        # caches
-        entity_cache: dict[str, int] = {}
-        value_name_cache: dict[tuple[str, int | None], int] = {}
-        unit_cache: dict[str, int] = {}
-        date_cache: dict[str, int] = {}
+            entity_cache: dict[str, int] = {}
+            value_name_cache: dict[tuple[str, int | None], int] = {}
+            unit_cache: dict[str, int] = {}
+            date_cache: dict[str, int] = {}
 
-        totals = Counter()
+            totals = Counter()
+            verbose_per_file = False
 
-        # Reduce noisy per-file info logs; keep progress and errors.
-        verbose_per_file = False
+            def get_entity_id_cached(
+                cik: str, company_name: str | None = None, metadata: dict | None = None
+            ) -> int:
+                key = cik
+                if key in entity_cache:
+                    if company_name or metadata:
+                        get_or_create_entity(
+                            cik,
+                            company_name=company_name,
+                            metadata=metadata,
+                            session=session,
+                        )
+                    return entity_cache[key]
+                entity_id = get_or_create_entity(
+                    cik,
+                    company_name=company_name,
+                    metadata=metadata,
+                    session=session,
+                ).id
+                entity_cache[key] = entity_id
+                return entity_id
 
-        def _sample(reason: str, fname: str, limit: int = 10) -> None:
-            if len(skip_reason_samples[reason]) < limit:
-                skip_reason_samples[reason].append(fname)
+            def get_unit_id_cached(unit_name: str | None) -> int:
+                key = (unit_name or "NA").strip() or "NA"
+                if key in unit_cache:
+                    return unit_cache[key]
+                unit_id = get_or_create_unit(key, session=session).id
+                unit_cache[key] = unit_id
+                return unit_id
 
-        def get_entity_id_cached(
-            cik: str, company_name: str | None = None, metadata: dict | None = None
-        ) -> int:
-            key = cik
-            if key in entity_cache:
-                # still backfill name/metadata via DB if needed
-                if company_name or metadata:
-                    get_or_create_entity(cik, company_name, metadata)
-                return entity_cache[key]
-            entity_id = get_or_create_entity(
-                cik, company_name=company_name, metadata=metadata
-            ).id
-            entity_cache[key] = entity_id
-            return entity_id
+            def get_value_name_id_cached(name: str, unit_id: int | None) -> int:
+                key = (name, unit_id)
+                if key in value_name_cache:
+                    return value_name_cache[key]
+                vn_id = get_or_create_value_name(
+                    name, unit_id=unit_id, session=session
+                ).id
+                value_name_cache[key] = vn_id
+                return vn_id
 
-        def get_unit_id_cached(unit_name: str | None) -> int:
-            key = (unit_name or "NA").strip() or "NA"
-            if key in unit_cache:
-                return unit_cache[key]
-            unit_id = get_or_create_unit(key).id
-            unit_cache[key] = unit_id
-            return unit_id
+            def get_date_id_cached(date_str: str) -> int | None:
+                if date_str in date_cache:
+                    return date_cache[date_str]
+                date_entry = get_or_create_date_entry(date_str, session=session)
+                if not date_entry:
+                    return None
+                date_cache[date_str] = date_entry.id
+                return date_entry.id
 
-        def get_value_name_id_cached(name: str, unit_id: int | None) -> int:
-            key = (name, unit_id)
-            if key in value_name_cache:
-                return value_name_cache[key]
-            vn_id = get_or_create_value_name(name, unit_id=unit_id).id
-            value_name_cache[key] = vn_id
-            return vn_id
+            get_unit_id_cached("NA")
 
-        def get_date_id_cached(date_str: str) -> int | None:
-            if date_str in date_cache:
-                return date_cache[date_str]
-            date_entry = get_or_create_date_entry(date_str)
-            if not date_entry:
-                return None
-            date_cache[date_str] = date_entry.id
-            return date_entry.id
+            for idx, (source, file_path, filename) in enumerate(files, 1):
+                t0 = perf_counter()
 
-        # Ensure NA unit exists.
-        get_unit_id_cached("NA")
-
-        for idx, (source, file_path, filename) in enumerate(files, 1):
-            t0 = perf_counter()
-
-            rel_path = os.path.relpath(file_path, RAW_DATA_DIR)
-            file_key = _source_file_key(source, rel_path)
-            if file_key in processed:
-                continue
-
-            if idx % 100 == 0:
-                logger.info("Progress: %s/%s files", idx, total_files)
-                print(f"Progress: {idx}/{total_files} files")
-
-            if verbose_per_file:
-                print(f"Processing file {idx}/{total_files}: [{source}] {rel_path}")
-                logger.info(
-                    f"Processing file {idx}/{total_files}: [{source}] {rel_path}"
-                )
-
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-
-                if not isinstance(data, dict):
-                    _log_unprocessed(
-                        source=source,
-                        filename=rel_path,
-                        reason="non_dict_json",
-                        details=f"type={type(data).__name__}",
-                        skip_reasons=skip_reasons,
-                        skip_reason_samples=skip_reason_samples,
-                        error_files=error_files,
-                    )
+                rel_path = os.path.relpath(file_path, RAW_DATA_DIR)
+                file_key = _source_file_key(source, rel_path)
+                if file_key in processed:
                     continue
 
-                cik, company_name, metadata = extract_entity_identity(data, filename)
-                if not cik:
-                    _log_unprocessed(
-                        source=source,
-                        filename=rel_path,
-                        reason="missing_cik_and_cannot_infer",
-                        details=f"top_keys={sorted(list(data.keys()))[:30]}",
-                        skip_reasons=skip_reasons,
-                        skip_reason_samples=skip_reason_samples,
-                        error_files=error_files,
+                if idx % 100 == 0:
+                    logger.info(
+                        "Worker %s/%s progress: %s/%s files",
+                        worker_index + 1,
+                        workers,
+                        idx,
+                        total_files,
                     )
-                    continue
 
-                entity_id = get_entity_id_cached(
-                    cik, company_name=company_name, metadata=metadata
-                )
+                if verbose_per_file:
+                    logger.info(
+                        "Worker %s: Processing file %s/%s: [%s] %s",
+                        worker_index + 1,
+                        idx,
+                        total_files,
+                        source,
+                        rel_path,
+                    )
 
-                inserts_planned = 0
-                duplicates = 0
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
 
-                if source == "companyfacts":
-                    if not _is_nonempty_dict(data.get("facts")):
+                    if not isinstance(data, dict):
                         _log_unprocessed(
                             source=source,
                             filename=rel_path,
-                            reason="missing_facts",
-                            details=f"cik={cik} entityName={company_name} top_keys={sorted(list(data.keys()))[:30]}",
+                            reason="non_dict_json",
+                            details=f"type={type(data).__name__}",
                             skip_reasons=skip_reasons,
                             skip_reason_samples=skip_reason_samples,
                             error_files=error_files,
                         )
                         continue
 
-                    inserts_planned, duplicates = process_companyfacts_file(
-                        data=data,
-                        source=source,
-                        filename=rel_path,
-                        entity_id=entity_id,
-                        get_unit_id_cached=get_unit_id_cached,
-                        get_value_name_id_cached=get_value_name_id_cached,
-                        get_date_id_cached=get_date_id_cached,
+                    cik, company_name, metadata = extract_entity_identity(
+                        data, filename
+                    )
+                    if not cik:
+                        _log_unprocessed(
+                            source=source,
+                            filename=rel_path,
+                            reason="missing_cik_and_cannot_infer",
+                            details=f"top_keys={sorted(list(data.keys()))[:30]}",
+                            skip_reasons=skip_reasons,
+                            skip_reason_samples=skip_reason_samples,
+                            error_files=error_files,
+                        )
+                        continue
+
+                    entity_id = get_entity_id_cached(
+                        cik, company_name=company_name, metadata=metadata
                     )
 
-                elif source == "submissions":
-                    schema, inserts_planned, duplicates, unprocessed_reason = (
-                        process_submissions_file(
+                    inserts_planned = 0
+                    duplicates = 0
+
+                    if source == "companyfacts":
+                        if not _is_nonempty_dict(data.get("facts")):
+                            _log_unprocessed(
+                                source=source,
+                                filename=rel_path,
+                                reason="missing_facts",
+                                details=f"cik={cik} entityName={company_name} top_keys={sorted(list(data.keys()))[:30]}",
+                                skip_reasons=skip_reasons,
+                                skip_reason_samples=skip_reason_samples,
+                                error_files=error_files,
+                            )
+                            continue
+
+                        inserts_planned, duplicates = process_companyfacts_file(
+                            session=session,
                             data=data,
                             source=source,
                             filename=rel_path,
@@ -1000,96 +1102,134 @@ def main():
                             get_value_name_id_cached=get_value_name_id_cached,
                             get_date_id_cached=get_date_id_cached,
                         )
-                    )
-                    if unprocessed_reason:
+
+                    elif source == "submissions":
+                        schema, inserts_planned, duplicates, unprocessed_reason = (
+                            process_submissions_file(
+                                session=session,
+                                data=data,
+                                source=source,
+                                filename=rel_path,
+                                entity_id=entity_id,
+                                get_unit_id_cached=get_unit_id_cached,
+                                get_value_name_id_cached=get_value_name_id_cached,
+                                get_date_id_cached=get_date_id_cached,
+                            )
+                        )
+                        if unprocessed_reason:
+                            _log_unprocessed(
+                                source=source,
+                                filename=rel_path,
+                                reason=unprocessed_reason,
+                                details=f"schema={schema} keys={sorted(list(data.keys()))[:30]}",
+                                skip_reasons=skip_reasons,
+                                skip_reason_samples=skip_reason_samples,
+                                error_files=error_files,
+                            )
+                            continue
+
+                    else:
                         _log_unprocessed(
                             source=source,
                             filename=rel_path,
-                            reason=unprocessed_reason,
-                            details=f"schema={schema} keys={sorted(list(data.keys()))[:30]}",
+                            reason="unknown_source",
+                            details=f"No handler for source folder '{source}'",
                             skip_reasons=skip_reasons,
                             skip_reason_samples=skip_reason_samples,
                             error_files=error_files,
                         )
                         continue
 
-                else:
-                    _log_unprocessed(
-                        source=source,
-                        filename=rel_path,
-                        reason="unknown_source",
-                        details=f"No handler for source folder '{source}'",
-                        skip_reasons=skip_reasons,
-                        skip_reason_samples=skip_reason_samples,
-                        error_files=error_files,
+                    _mark_file_processed(
+                        session, entity_id=entity_id, source_file=file_key
                     )
-                    continue
 
-                # Mark file processed and commit once per file (data + marker row)
-                _mark_file_processed(entity_id=entity_id, source_file=file_key)
+                    try:
+                        session.commit()
+                    except IntegrityError:
+                        session.rollback()
+                        error_reasons["IntegrityError"] += 1
+                        error_files.append(f"{source}:{rel_path}")
+                        continue
+                    except Exception as e:
+                        session.rollback()
+                        error_reasons[type(e).__name__] += 1
+                        logger.error(
+                            "Commit failed for file %s: %s", rel_path, e, exc_info=True
+                        )
+                        error_files.append(f"{source}:{rel_path}")
+                        continue
 
-                try:
-                    session.commit()
-                except IntegrityError:
-                    session.rollback()
-                    error_reasons["IntegrityError"] += 1
-                    error_files.append(f"{source}:{rel_path}")
-                    continue
+                    processed.add(file_key)
+
+                    inserted = max(inserts_planned - duplicates, 0)
+                    total_successful_inserts += inserted
+                    total_duplicates += duplicates
+
+                    totals["files_processed"] += 1
+                    totals["inserted"] += inserted
+                    totals["duplicates"] += duplicates
+
+                    logger.info(
+                        "Worker %s completed file %s source=%s: inserted=%s dup=%s elapsed=%.2fs",
+                        worker_index + 1,
+                        rel_path,
+                        source,
+                        inserted,
+                        duplicates,
+                        perf_counter() - t0,
+                    )
+
                 except Exception as e:
                     session.rollback()
                     error_reasons[type(e).__name__] += 1
                     logger.error(
-                        "Commit failed for file %s: %s", rel_path, e, exc_info=True
+                        "Error processing file %s: %s", rel_path, e, exc_info=True
                     )
                     error_files.append(f"{source}:{rel_path}")
-                    continue
 
-                # update in-memory processed set so we don't redo it in the same run
-                processed.add(file_key)
-
-                inserted = max(inserts_planned - duplicates, 0)
-                total_successful_inserts += inserted
-                total_duplicates += duplicates
-
-                totals["files_processed"] += 1
-                totals["inserted"] += inserted
-                totals["duplicates"] += duplicates
-
+            if skip_reasons:
                 logger.info(
-                    "Completed file %s source=%s: inserted=%s dup=%s elapsed=%.2fs",
-                    rel_path,
-                    source,
-                    inserted,
-                    duplicates,
-                    perf_counter() - t0,
+                    "Worker %s skip reasons: %s", worker_index + 1, dict(skip_reasons)
+                )
+            if error_reasons:
+                logger.info(
+                    "Worker %s exception types: %s",
+                    worker_index + 1,
+                    dict(error_reasons),
                 )
 
-            except Exception as e:
-                session.rollback()
-                error_reasons[type(e).__name__] += 1
-                logger.error(f"Error processing file {rel_path}: {e}", exc_info=True)
-                error_files.append(f"{source}:{rel_path}")
-
-        session.close()
-
-        if skip_reasons:
-            logger.info("Skip reasons summary: %s", dict(skip_reasons.most_common()))
-            logger.info("Skip reason samples: %s", dict(skip_reason_samples))
-        if error_reasons:
-            logger.info(
-                "Exception types summary: %s", dict(error_reasons.most_common())
+            summary_msg = (
+                f"Worker {worker_index + 1}/{workers} complete. Total assigned files: {total_files}, "
+                f"Successful inserts: {total_successful_inserts}, duplicates skipped: {total_duplicates}, "
+                f"Files with errors: {len(set(error_files))}"
             )
+            logger.info(summary_msg)
+            print(summary_msg)
 
-        summary_msg = (
-            f"Processing complete. Total files: {total_files}, "
-            f"Total successful inserts: {total_successful_inserts}, "
-            f"Total duplicates skipped: {total_duplicates}, "
-            f"Files with errors: {len(set(error_files))}"
-        )
-        print(summary_msg)
-        logger.info(summary_msg)
-        if error_files:
-            logger.error(f"Files with errors: {set(error_files)}")
+
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        add_help=True, description="Populate daily values from raw_data into sec.db"
+    )
+    p.add_argument(
+        "--db", default=DB_PATH, help="Path to SQLite DB (default: data/sec.db)"
+    )
+    p.add_argument("--workers", type=int, default=1, help="Total worker processes")
+    p.add_argument(
+        "--worker-index",
+        type=int,
+        default=0,
+        help="Zero-based index of this worker (0..workers-1)",
+    )
+    # Accept unknown args so `pytest` calling `m.main()` doesn't crash.
+    args, _unknown = p.parse_known_args(argv)
+    return args
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = _parse_args(argv)
+    _run(workers=args.workers, worker_index=args.worker_index, db_path=args.db)
 
 
 if __name__ == "__main__":

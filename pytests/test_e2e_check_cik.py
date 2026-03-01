@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import re
 
-from playwright.sync_api import Page, expect
+import pytest
+
+playwright = pytest.importorskip("playwright")
+from playwright.sync_api import Page, expect  # type: ignore
 
 
 def test_check_cik_cards_expand_and_navigate(page: Page, seeded_live_server):

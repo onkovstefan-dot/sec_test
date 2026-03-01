@@ -102,6 +102,8 @@ def test_process_companyfacts_file_inserts_daily_value(
     # Patch the script's global session/engine to the temp test DB.
     monkeypatch.setattr(m, "engine", engine, raising=False)
     monkeypatch.setattr(m, "session", session, raising=False)
+    # Also patch Session to prevent _init_default_db_globals from recreating they objects.
+    monkeypatch.setattr(m, "Session", lambda: session, raising=False)
 
     # Ensure NA unit exists and caches behave.
     unit_id = m.get_or_create_unit("NA").id
@@ -160,6 +162,7 @@ def test_process_submissions_file_returns_unprocessed_reason_when_dates_missing(
     # Patch global session/engine to temp DB.
     monkeypatch.setattr(m, "engine", engine, raising=False)
     monkeypatch.setattr(m, "session", session, raising=False)
+    monkeypatch.setattr(m, "Session", lambda: session, raising=False)
 
     entity = m.get_or_create_entity("0000000013", company_name="SAMPLE")
 
@@ -213,6 +216,7 @@ def test_main_end_to_end_discovers_and_processes_two_files(tmp_db_session, monke
 
     monkeypatch.setattr(m, "engine", engine, raising=False)
     monkeypatch.setattr(m, "session", session, raising=False)
+    monkeypatch.setattr(m, "Session", lambda: session, raising=False)
 
     # Force discovery to only return our two fixture files.
     root = Path(__file__).resolve().parents[1] / "test_data"
@@ -228,7 +232,9 @@ def test_main_end_to_end_discovers_and_processes_two_files(tmp_db_session, monke
     monkeypatch.setattr(m, "discover_json_files", fake_discover, raising=True)
     monkeypatch.setattr(m, "RAW_DATA_DIR", str(root), raising=False)
 
-    m.main()
+    # Note that engine.url gives us the sqlite path. The test temp db is isolated.
+    db_path = str(engine.url).replace("sqlite:///", "")
+    m.main(["--db", db_path])
 
     # Assets + submissions.recent.form + submissions.recent.accessionNumber + submissions.recent.primaryDocument
     assert session.query(DailyValue).count() >= 2
