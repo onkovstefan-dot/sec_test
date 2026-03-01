@@ -294,7 +294,21 @@ See `docs/RAW_DATA_SOURCES.md` for the curated list of approved data sources.
 
 ---
 
-## 11. Conventions & Constraints
+## 11. Lines of Code
+
+| File type | Lines |
+|---|---|
+| Python (`.py`) | 9215 |
+| CSS (`.css`) | 511 |
+| HTML (`.html`) | 364 |
+| JavaScript (`.js`) | 250 |
+| **Total** | **10340** |
+
+Counted with `find . \( -name "*.py" -o -name "*.html" -o -name "*.js" -o -name "*.css" \) ! -path "./.git/*" | xargs wc -l`.
+
+---
+
+## 12. Conventions & Constraints
 
 - **Line length:** 100 characters (black + flake8).
 - **Imports:** isort with black profile.
