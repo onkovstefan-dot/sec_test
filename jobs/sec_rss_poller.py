@@ -3,11 +3,13 @@ from __future__ import annotations
 import argparse
 import re
 import xml.etree.ElementTree as ET
+from urllib.parse import urlparse
 
 from sqlalchemy.orm import Session as SASession
 
 from db import Base, SessionLocal, engine
 from logging_utils import get_logger
+from models.entities import Entity
 from models.entity_identifiers import EntityIdentifier
 from models.sec_filings import SecFiling
 from utils.sec_edgar_api import fetch_rss_feed
@@ -33,6 +35,32 @@ def _extract_cik(text: str) -> str | None:
     if not m:
         return None
     return m.group(1).zfill(10)
+
+
+def _extract_cik_from_link(link: str | None) -> str | None:
+    """Extract CIK from a typical EDGAR archive link.
+
+    Example:
+      https://www.sec.gov/Archives/edgar/data/1824920/000119312526083754/...
+    """
+
+    if not link:
+        return None
+    try:
+        path = urlparse(str(link)).path or ""
+    except Exception:
+        path = str(link)
+
+    marker = "/Archives/edgar/data/"
+    if marker not in path:
+        return None
+    tail = path.split(marker, 1)[1]
+    parts = [p for p in tail.split("/") if p]
+    if not parts:
+        return None
+    if parts[0].isdigit():
+        return parts[0].zfill(10)
+    return None
 
 
 def parse_atom_entries(atom_bytes: bytes) -> list[dict]:
@@ -70,7 +98,7 @@ def parse_atom_entries(atom_bytes: bytes) -> list[dict]:
 
         text = " ".join([title, summary, link or ""]).strip()
 
-        cik = _extract_cik(text)
+        cik = _extract_cik(text) or _extract_cik_from_link(link)
 
         # Accessions sometimes appear as 0000320193-24-000001 in title.
         acc = None
@@ -102,6 +130,7 @@ def run_poll(*, session: SASession, url: str, limit: int = 50) -> dict[str, int]
 
     inserted = 0
     unknown = 0
+    created_entities = 0
 
     for e in entries:
         cik = e.get("cik")
@@ -112,15 +141,62 @@ def run_poll(*, session: SASession, url: str, limit: int = 50) -> dict[str, int]
         if not cik:
             continue
 
+        # Entity identifiers in this DB are stored as non-zero-padded digits.
+        # Normalize to that format for lookup.
+        cik_lookup = str(cik).zfill(10)
+
+        # If the feed gave us the "-index.htm" page, we can derive a sensible
+        # default primary document. For most filings, the full submission text
+        # file exists at:
+        #   .../{acc_nodash}/{acc}-index.htm  (index)
+        #   .../{acc_nodash}/{acc}.txt        (full submission text)
+        # We'll set document_url to the .txt so sec_api_ingest can fetch something
+        # even without parsing the index to locate the "primary" HTML.
+        index_url = str(link) if link else None
+        document_url = None
+        full_text_url = None
+        if index_url and index_url.endswith("-index.htm") and acc:
+            full_text_url = index_url.replace("-index.htm", ".txt")
+            document_url = full_text_url
+
         ident = (
             session.query(EntityIdentifier)
-            .filter_by(scheme="sec_cik", value=str(cik))
+            .filter_by(scheme="sec_cik", value=cik_lookup)
             .first()
         )
         if ident is None:
             unknown += 1
-            logger.info("RSS poller: unknown CIK=%s", cik)
-            continue
+            # Create a minimal placeholder entity so we can still queue filings.
+            # This keeps the pipeline moving even if the entity registry isn't
+            # populated for a newly-seen CIK.
+            ent = Entity(cik=cik_lookup)
+            session.add(ent)
+            try:
+                session.flush()  # assign ent.id
+                ident = EntityIdentifier(
+                    entity_id=ent.id, scheme="sec_cik", value=cik_lookup
+                )
+                session.add(ident)
+                session.flush()
+                created_entities += 1
+                logger.info(
+                    "RSS poller: created placeholder entity for CIK=%s", cik_lookup
+                )
+            except Exception:
+                # If another process inserted the identifier (or a previous partial
+                # run did), re-query and continue without crashing.
+                session.rollback()
+                ident = (
+                    session.query(EntityIdentifier)
+                    .filter_by(scheme="sec_cik", value=cik_lookup)
+                    .first()
+                )
+                if ident is None:
+                    logger.exception(
+                        "RSS poller: failed to create/lookup identifier for CIK=%s",
+                        cik_lookup,
+                    )
+                    continue
 
         if not acc or not form_type:
             continue
@@ -138,7 +214,9 @@ def run_poll(*, session: SASession, url: str, limit: int = 50) -> dict[str, int]
                 entity_id=ident.entity_id,
                 accession_number=str(acc),
                 form_type=str(form_type),
-                index_url=str(link) if link else None,
+                index_url=index_url,
+                document_url=document_url,
+                full_text_url=full_text_url,
                 fetch_status="pending",
                 source="sec_rss",
             )
@@ -146,7 +224,12 @@ def run_poll(*, session: SASession, url: str, limit: int = 50) -> dict[str, int]
         inserted += 1
 
     session.commit()
-    return {"inserted": inserted, "unknown_cik": unknown, "entries": len(entries)}
+    return {
+        "inserted": inserted,
+        "unknown_cik": unknown,
+        "created_entities": created_entities,
+        "entries": len(entries),
+    }
 
 
 def main(argv: list[str] | None = None) -> None:

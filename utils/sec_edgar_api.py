@@ -120,15 +120,18 @@ def _sec_user_agent() -> str:
     SEC requires a descriptive UA that includes contact info.
 
     Configure via:
-      SETTINGS["SEC_USER_AGENT"] = "AppName your@email.com"
+      - env var SEC_EDGAR_USER_AGENT="AppName your@email.com"
+      - or SETTINGS["SEC_USER_AGENT"] = "AppName your@email.com"
 
     If missing, falls back to a safe placeholder, but callers should set it.
     """
 
-    ua = SETTINGS.get("SEC_USER_AGENT")
+    import os
+
+    ua = os.getenv("SEC_EDGAR_USER_AGENT") or SETTINGS.get("SEC_USER_AGENT")
     if isinstance(ua, str) and ua.strip():
         return ua.strip()
-    return "InvestorGuide (contact: unset)"
+    return "sec_test (contact: unset)"
 
 
 def _parse_retry_after_seconds(value: str | None) -> float | None:
