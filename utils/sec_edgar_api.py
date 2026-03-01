@@ -34,6 +34,41 @@ class SecResponse:
         return self.content.decode("utf-8", errors="replace")
 
 
+def _safe_preview_bytes(data: bytes | None, *, limit: int = 2000) -> str:
+    """Best-effort, log-safe preview of response body.
+
+    Truncates to `limit` bytes and decodes with replacement.
+    """
+
+    if not data:
+        return ""
+    try:
+        return data[:limit].decode("utf-8", errors="replace")
+    except Exception:
+        # Fall back to repr-like preview.
+        try:
+            return repr(data[:limit])
+        except Exception:
+            return ""
+
+
+def _headers_for_log(headers: dict[str, str]) -> dict[str, str]:
+    """Return a redacted copy of headers for logging."""
+
+    redacted: dict[str, str] = {}
+    for k, v in (headers or {}).items():
+        lk = str(k).lower()
+        if (
+            lk in {"authorization", "x-api-key", "api-key"}
+            or "token" in lk
+            or "secret" in lk
+        ):
+            redacted[str(k)] = "<redacted>"
+        else:
+            redacted[str(k)] = str(v)
+    return redacted
+
+
 class SlidingWindowRateLimiter:
     """Thread-safe sliding-window rate limiter.
 
@@ -149,7 +184,10 @@ def _request(
         except Exception as e:  # requests exceptions
             last_exc = e
             logger.warning(
-                "SEC request failed | url=%s attempt=%s err=%s", url, attempt + 1, e
+                "SEC request failed | url=%s attempt=%s err=%s",
+                url,
+                attempt + 1,
+                e,
             )
             if attempt < max_attempts - 1:
                 _sleep_backoff(attempt)
@@ -165,9 +203,28 @@ def _request(
                 content_type=resp.headers.get("Content-Type"),
             )
 
+        retry_after_raw = resp.headers.get("Retry-After")
+        retry_after = _parse_retry_after_seconds(retry_after_raw)
+
+        # Detailed error diagnostics (safe previews only)
+        try:
+            logger.warning(
+                "SEC non-2xx response | status=%s url=%s attempt=%s/%s content_type=%s retry_after=%s headers=%s body_preview=%s",
+                resp.status_code,
+                url,
+                attempt + 1,
+                max_attempts,
+                resp.headers.get("Content-Type"),
+                retry_after_raw,
+                _headers_for_log(merged_headers),
+                _safe_preview_bytes(getattr(resp, "content", b"")),
+            )
+        except Exception:
+            # Never let logging break the request flow.
+            logger.debug("SEC response logging failed", exc_info=True)
+
         # Retryable
         if resp.status_code in (429, 500, 502, 503, 504):
-            retry_after = _parse_retry_after_seconds(resp.headers.get("Retry-After"))
             if attempt < max_attempts - 1:
                 if retry_after is not None:
                     time.sleep(retry_after)
