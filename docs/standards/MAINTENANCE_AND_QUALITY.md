@@ -10,6 +10,18 @@ This document outlines a repeatable, generic process for maintaining high code q
 - **Independence:** This plan avoids referencing the specific implementation details of the codebase, ensuring it remains an executing template that can be run repeatedly over time.
 - **Verification:** User will do a final verification, execute pytests, and commit manually at the complete end, avoiding per-session manual checks.
 
+## External API Call Best Practices
+When working with external APIs (SEC EDGAR, GLEIF, etc.), always apply these principles to minimize load on external servers and improve reliability:
+
+- **Offload Processing:** Perform all data filtering, transformation, validation, and business logic in Python locally. Never rely on external servers for tasks that can be done client-side.
+- **Use Filtering:** Apply database-level filtering (SQL WHERE clauses) before making external API calls. Only fetch what is necessary based on status flags, timestamps, or other criteria.
+- **Batch with ORDER BY:** When processing multiple records, use consistent ordering (e.g., `ORDER BY id ASC`) to ensure deterministic, resumable batch processing. This prevents duplicate work if a job is interrupted.
+- **Configurable Limits:** Always make batch sizes and concurrency configurable via environment variables (e.g., `SEC_INGEST_DEFAULT_LIMIT`, `SEC_INGEST_DEFAULT_WORKERS`). Start with conservative defaults (limit=10, workers=1) while testing.
+- **Rate Limiting Awareness:** Respect external API rate limits. Implement exponential backoff for retries and log rate-limit errors distinctly.
+- **Status Tracking:** Use database status fields (e.g., `fetch_status: pending/fetched/failed`) to track processing state. This enables retry logic and prevents redundant API calls.
+- **Required Metadata:** Validate that all required fields (URLs, identifiers, etc.) exist before making external calls. Log skipped records clearly with reasons.
+- **User Agent Compliance:** Always set compliant User-Agent headers for services that require them (SEC EDGAR requires identification).
+
 ---
 
 ## Session 1: Structural Refactoring and Clean Dependencies
@@ -37,6 +49,9 @@ This document outlines a repeatable, generic process for maintaining high code q
 - Analyze current test coverage. Write new tests to ensure comprehensive coverage.
 - Implement comprehensive exception handling at runtime to guarantee a graceful user experience during errors.
 - Ensure data ingestion pipelines read, insert, and rely on clean, exactly matched data per entity payload.
+- **External API Integration:** Review all external API calls and ensure they follow the External API Call Best Practices (filtering, batching, configurable limits, status tracking, proper error handling).
+- Verify that jobs respect rate limits and have proper retry mechanisms with exponential backoff.
+- Ensure all external API failures are logged with sufficient context (URL, status code, filing ID, etc.) for debugging.
 - Append a report of the testing coverage and fault-tolerance improvements to `tmp/session_notes.txt`.
 
 ## Session 4: Scalability, UI/UX, and Modernization

@@ -2,6 +2,22 @@
 
 *Note: Copy and paste the commands below for each distinct AI agent session to execute the generic plan progressively.*
 
+This document provides ready-to-use prompts for executing the maintenance plan defined in `docs/standards/MAINTENANCE_AND_QUALITY.md`.
+
+---
+
+## External API Call Best Practices Reminder
+
+Before starting any session that involves external API integration, remember these principles:
+- **Offload Processing:** Perform filtering, transformation, validation locally in Python
+- **Use Database Filtering:** Apply SQL WHERE clauses before making external API calls
+- **Batch with ORDER BY:** Use consistent ordering (e.g., `ORDER BY id ASC`) for deterministic, resumable processing
+- **Configurable Limits:** Use environment variables (e.g., `SEC_INGEST_DEFAULT_LIMIT=10`, `SEC_INGEST_DEFAULT_WORKERS=1`)
+- **Rate Limiting:** Respect external API limits, implement exponential backoff
+- **Status Tracking:** Use database status fields (pending/fetched/failed)
+- **Validate Metadata:** Check required fields exist before making external calls
+- **User Agent Compliance:** Set compliant User-Agent headers (e.g., SEC EDGAR)
+
 ---
 
 ## Instructions for Session 1
@@ -9,7 +25,7 @@
 **Prompt:**
 ```
 Read the `README.md` file for architectural constraints and project philosophy.
-Read `docs/plans/maintenance_plan_20260301.md` for the overarching refactoring guidelines.
+Read `docs/standards/MAINTENANCE_AND_QUALITY.md` for the overarching refactoring guidelines.
 Execute Session 1 of the structural plan:
 1. Identify pure logic (no database models) and move it into the `utils/` directory.
 2. Identify DB-dependent logic and shift it into the `modules/` directory.
@@ -26,7 +42,7 @@ Execute Session 1 of the structural plan:
 **Prompt:**
 ```
 Read the `README.md` file for project scope.
-Read `docs/plans/maintenance_plan_20260301.md`.
+Read `docs/standards/MAINTENANCE_AND_QUALITY.md`.
 Read previous state from `tmp/session_notes.txt`.
 Execute Session 2 focused on Security and Privacy:
 1. Identify and remove any untracked, sensitive, or unnecessary files from the workspace that should not be committed to Git.
@@ -42,13 +58,16 @@ Execute Session 2 focused on Security and Privacy:
 **Prompt:**
 ```
 Read the `README.md` file.
-Read `docs/plans/maintenance_plan_20260301.md`.
+Read `docs/standards/MAINTENANCE_AND_QUALITY.md`.
 Read context from `tmp/session_notes.txt`.
 Execute Session 3 for Robustness and Testing:
 1. Review the existing test suite and implement missing coverage to ensure comprehensive testing.
 2. Refactor parsing and ingestion functions to ensure they only read, insert, and rely on perfectly matched and clean data per entity.
 3. Enhance runtime exception handling across endpoints and data pipelines to maintain a seamless user experience.
-4. Append an outline of your added tests and fault-tolerance boundaries to `tmp/session_notes.txt`.
+4. Review all external API calls and ensure they follow the External API Call Best Practices (filtering, batching, configurable limits, status tracking, proper error handling).
+5. Verify that jobs respect rate limits and have proper retry mechanisms with exponential backoff.
+6. Ensure all external API failures are logged with sufficient context (URL, status code, filing ID, etc.) for debugging.
+7. Append an outline of your added tests and fault-tolerance boundaries to `tmp/session_notes.txt`.
 ```
 
 ---
@@ -58,7 +77,7 @@ Execute Session 3 for Robustness and Testing:
 **Prompt:**
 ```
 Read the `README.md` file.
-Read `docs/plans/maintenance_plan_20260301.md`.
+Read `docs/standards/MAINTENANCE_AND_QUALITY.md`.
 Read context from `tmp/session_notes.txt`.
 Execute Session 4 targeting UI/UX and Scalability:
 1. Implement a beautiful, modern UI that is scalable and performant.
@@ -74,7 +93,7 @@ Execute Session 4 targeting UI/UX and Scalability:
 **Prompt:**
 ```
 Read the `README.md` file.
-Read `docs/plans/maintenance_plan_20260301.md`.
+Read `docs/standards/MAINTENANCE_AND_QUALITY.md`.
 Read context from `tmp/session_notes.txt`.
 Execute Session 5 for Final Polish:
 1. Conduct a full repository sweep to eliminate all dead, unused, or commented-out code.
