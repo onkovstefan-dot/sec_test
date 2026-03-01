@@ -44,7 +44,89 @@ def main() -> None:
 
         changed = False
 
-        # entities: add metadata columns
+        # entity_metadata: add new metadata columns
+        changed |= add_column_if_missing(cur, "entity_metadata", "sic", "TEXT")
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "sic_description", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "state_of_incorporation", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "fiscal_year_end", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "filer_category", "TEXT"
+        )
+        changed |= add_column_if_missing(cur, "entity_metadata", "entity_type", "TEXT")
+        changed |= add_column_if_missing(cur, "entity_metadata", "website", "TEXT")
+        changed |= add_column_if_missing(cur, "entity_metadata", "phone", "TEXT")
+        changed |= add_column_if_missing(cur, "entity_metadata", "ein", "TEXT")
+        changed |= add_column_if_missing(cur, "entity_metadata", "tickers", "TEXT")
+        changed |= add_column_if_missing(cur, "entity_metadata", "exchanges", "TEXT")
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "business_street1", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "business_street2", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "business_city", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "business_state", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "business_zipcode", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "business_country", "TEXT"
+        )
+
+        # Additional fields from submissions analysis
+        changed |= add_column_if_missing(cur, "entity_metadata", "lei", "TEXT")
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "investor_website", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "entity_description", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "owner_organization", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "state_of_incorporation_description", "TEXT"
+        )
+        changed |= add_column_if_missing(cur, "entity_metadata", "sec_flags", "TEXT")
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "has_insider_transactions_as_owner", "INTEGER"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "has_insider_transactions_as_issuer", "INTEGER"
+        )
+
+        # Mailing address fields
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "mailing_street1", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "mailing_street2", "TEXT"
+        )
+        changed |= add_column_if_missing(cur, "entity_metadata", "mailing_city", "TEXT")
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "mailing_state", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "mailing_zipcode", "TEXT"
+        )
+        changed |= add_column_if_missing(
+            cur, "entity_metadata", "mailing_country", "TEXT"
+        )
+
+        # Former names (stored as JSON)
+        changed |= add_column_if_missing(cur, "entity_metadata", "former_names", "TEXT")
+
+        # entities: add metadata columns (legacy - now moved to entity_metadata table)
         changed |= add_column_if_missing(cur, "entities", "company_name", "TEXT")
         changed |= add_column_if_missing(cur, "entities", "country", "TEXT")
         changed |= add_column_if_missing(cur, "entities", "sector", "TEXT")

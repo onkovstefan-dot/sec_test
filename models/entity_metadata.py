@@ -23,7 +23,61 @@ class EntityMetadata(Base):
         nullable=False,
     )
 
-    # Optional metadata
+    # Optional metadata from companyfacts / submissions
     company_name = Column(String, nullable=True)
+
+    # SIC (Standard Industrial Classification)
+    sic = Column(String, nullable=True)
+    sic_description = Column(String, nullable=True)
+
+    # Incorporation and fiscal info
+    state_of_incorporation = Column(String, nullable=True)
+    fiscal_year_end = Column(String, nullable=True)
+
+    # Filer category and entity type
+    filer_category = Column(String, nullable=True)
+    entity_type = Column(String, nullable=True)
+
+    # Contact information
+    website = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
+    ein = Column(String, nullable=True)
+
+    # Additional entity info
+    lei = Column(String, nullable=True)  # Legal Entity Identifier
+    investor_website = Column(String, nullable=True)
+    entity_description = Column(String, nullable=True)
+    owner_organization = Column(String, nullable=True)
+    state_of_incorporation_description = Column(String, nullable=True)
+
+    # Regulatory flags
+    sec_flags = Column(String, nullable=True)
+    has_insider_transactions_as_owner = Column(Integer, nullable=True)
+    has_insider_transactions_as_issuer = Column(Integer, nullable=True)
+
+    # Trading info
+    tickers = Column(String, nullable=True)  # JSON string or comma-separated
+    exchanges = Column(String, nullable=True)  # JSON string or comma-separated
+
+    # Business address
+    business_street1 = Column(String, nullable=True)
+    business_street2 = Column(String, nullable=True)
+    business_city = Column(String, nullable=True)
+    business_state = Column(String, nullable=True)
+    business_zipcode = Column(String, nullable=True)
+    business_country = Column(String, nullable=True)
+
+    # Mailing address (may differ from business address)
+    mailing_street1 = Column(String, nullable=True)
+    mailing_street2 = Column(String, nullable=True)
+    mailing_city = Column(String, nullable=True)
+    mailing_state = Column(String, nullable=True)
+    mailing_zipcode = Column(String, nullable=True)
+    mailing_country = Column(String, nullable=True)
+
+    # Former names (stored as JSON array)
+    former_names = Column(String, nullable=True)  # JSON array of {name, from, to}
+
+    # Deprecated fields (kept for backwards compatibility)
     country = Column(String, nullable=True)
     sector = Column(String, nullable=True)

@@ -1,0 +1,723 @@
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:08:48] START process_companyfacts_file
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:08:48] END process_companyfacts_file | started=2026-02-28T23:08:48 ended=2026-02-28T23:08:48 elapsed=0.00s
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:08:48] START process_submissions_file
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:08:48] END process_submissions_file | started=2026-02-28T23:08:48 ended=2026-02-28T23:08:48 elapsed=0.00s
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:08:48] START main
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:08:48] START populate_daily_values total
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:08:48] START process_companyfacts_file
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:08:48] END process_companyfacts_file | started=2026-02-28T23:08:48 ended=2026-02-28T23:08:48 elapsed=0.00s
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:08:48] START process_submissions_file
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:08:48] END process_submissions_file | started=2026-02-28T23:08:48 ended=2026-02-28T23:08:48 elapsed=0.00s
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:08:48] END populate_daily_values total | started=2026-02-28T23:08:48 ended=2026-02-28T23:08:48 elapsed=0.00s
+2026-02-28T21:08:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:08:48] END main | started=2026-02-28T23:08:48 ended=2026-02-28T23:08:48 elapsed=0.01s
+2026-02-28T21:09:38Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:38] START main
+2026-02-28T21:09:38Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:38] START populate_daily_values total
+2026-02-28T21:09:38Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:38] START discover_json_files
+2026-02-28T21:09:40Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:40] END discover_json_files | started=2026-02-28T23:09:38 ended=2026-02-28T23:09:40 elapsed=1.93s
+2026-02-28T21:09:40Z INFO sec_test.utils.populate_daily_values: Starting processing of 977248 files.
+2026-02-28T21:09:40Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:40] START process_companyfacts_file
+2026-02-28T21:09:40Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:40] END process_companyfacts_file | started=2026-02-28T23:09:40 ended=2026-02-28T23:09:40 elapsed=0.49s
+2026-02-28T21:09:40Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000001750.json source=companyfacts: inserted=9228 dup=10920 elapsed=0.50s
+2026-02-28T21:09:40Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:40] START process_companyfacts_file
+2026-02-28T21:09:41Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:41] END process_companyfacts_file | started=2026-02-28T23:09:40 ended=2026-02-28T23:09:41 elapsed=0.49s
+2026-02-28T21:09:41Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000001800.json source=companyfacts: inserted=10472 dup=11891 elapsed=0.51s
+2026-02-28T21:09:41Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:41] START process_companyfacts_file
+2026-02-28T21:09:41Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:41] END process_companyfacts_file | started=2026-02-28T23:09:41 ended=2026-02-28T23:09:41 elapsed=0.19s
+2026-02-28T21:09:41Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000001961.json source=companyfacts: inserted=3479 dup=3865 elapsed=0.20s
+2026-02-28T21:09:41Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:41] START process_companyfacts_file
+2026-02-28T21:09:41Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:41] END process_companyfacts_file | started=2026-02-28T23:09:41 ended=2026-02-28T23:09:41 elapsed=0.21s
+2026-02-28T21:09:41Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000002034.json source=companyfacts: inserted=4184 dup=5089 elapsed=0.22s
+2026-02-28T21:09:41Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:41] START process_companyfacts_file
+2026-02-28T21:09:41Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:41] END process_companyfacts_file | started=2026-02-28T23:09:41 ended=2026-02-28T23:09:41 elapsed=0.35s
+2026-02-28T21:09:41Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000002098.json source=companyfacts: inserted=7724 dup=8294 elapsed=0.36s
+2026-02-28T21:09:41Z WARNING sec_test.utils.populate_daily_values: Unprocessed file [companyfacts] companyfacts/CIK0000002110.json: missing_facts | cik=0000002110 entityName=None top_keys=['cik', 'entityName', 'facts']
+2026-02-28T21:09:41Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:41] START process_companyfacts_file
+2026-02-28T21:09:42Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:42] END process_companyfacts_file | started=2026-02-28T23:09:41 ended=2026-02-28T23:09:42 elapsed=0.37s
+2026-02-28T21:09:42Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000002178.json source=companyfacts: inserted=7670 dup=8823 elapsed=0.38s
+2026-02-28T21:09:42Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:42] START process_companyfacts_file
+2026-02-28T21:09:42Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:42] END process_companyfacts_file | started=2026-02-28T23:09:42 ended=2026-02-28T23:09:42 elapsed=0.34s
+2026-02-28T21:09:42Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000002186.json source=companyfacts: inserted=8187 dup=7114 elapsed=0.35s
+2026-02-28T21:09:42Z WARNING sec_test.utils.populate_daily_values: Unprocessed file [companyfacts] companyfacts/CIK0000002230.json: missing_facts | cik=0000002230 entityName=None top_keys=['cik', 'entityName', 'facts']
+2026-02-28T21:09:42Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:42] START process_companyfacts_file
+2026-02-28T21:09:43Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:43] END process_companyfacts_file | started=2026-02-28T23:09:42 ended=2026-02-28T23:09:43 elapsed=0.53s
+2026-02-28T21:09:43Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000002488.json source=companyfacts: inserted=11047 dup=12108 elapsed=0.55s
+2026-02-28T21:09:43Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:43] START process_companyfacts_file
+2026-02-28T21:09:43Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:43] END process_companyfacts_file | started=2026-02-28T23:09:43 ended=2026-02-28T23:09:43 elapsed=0.15s
+2026-02-28T21:09:43Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000002491.json source=companyfacts: inserted=3417 dup=3313 elapsed=0.16s
+2026-02-28T21:09:43Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:43] START process_companyfacts_file
+2026-02-28T21:09:43Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:43] END process_companyfacts_file | started=2026-02-28T23:09:43 ended=2026-02-28T23:09:43 elapsed=0.21s
+2026-02-28T21:09:43Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000002809.json source=companyfacts: inserted=4208 dup=3940 elapsed=0.22s
+2026-02-28T21:09:43Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:43] START process_companyfacts_file
+2026-02-28T21:09:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:44] END process_companyfacts_file | started=2026-02-28T23:09:43 ended=2026-02-28T23:09:44 elapsed=0.73s
+2026-02-28T21:09:44Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000002969.json source=companyfacts: inserted=14789 dup=18996 elapsed=0.75s
+2026-02-28T21:09:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:44] START process_companyfacts_file
+2026-02-28T21:09:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:44] END process_companyfacts_file | started=2026-02-28T23:09:44 ended=2026-02-28T23:09:44 elapsed=0.34s
+2026-02-28T21:09:44Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000003116.json source=companyfacts: inserted=6986 dup=9107 elapsed=0.36s
+2026-02-28T21:09:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:44] START process_companyfacts_file
+2026-02-28T21:09:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:44] END process_companyfacts_file | started=2026-02-28T23:09:44 ended=2026-02-28T23:09:44 elapsed=0.05s
+2026-02-28T21:09:44Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000003146.json source=companyfacts: inserted=380 dup=398 elapsed=0.05s
+2026-02-28T21:09:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:44] START process_companyfacts_file
+2026-02-28T21:09:45Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:45] END process_companyfacts_file | started=2026-02-28T23:09:44 ended=2026-02-28T23:09:45 elapsed=0.49s
+2026-02-28T21:09:45Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000003197.json source=companyfacts: inserted=10716 dup=11811 elapsed=0.51s
+2026-02-28T21:09:45Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:45] START process_companyfacts_file
+2026-02-28T21:09:45Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:45] END process_companyfacts_file | started=2026-02-28T23:09:45 ended=2026-02-28T23:09:45 elapsed=0.41s
+2026-02-28T21:09:45Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000003453.json source=companyfacts: inserted=8850 dup=10625 elapsed=0.43s
+2026-02-28T21:09:45Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:45] START process_companyfacts_file
+2026-02-28T21:09:45Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:45] END process_companyfacts_file | started=2026-02-28T23:09:45 ended=2026-02-28T23:09:45 elapsed=0.30s
+2026-02-28T21:09:45Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000003499.json source=companyfacts: inserted=6640 dup=7402 elapsed=0.31s
+2026-02-28T21:09:45Z WARNING sec_test.utils.populate_daily_values: Unprocessed file [companyfacts] companyfacts/CIK0000003521.json: missing_facts | cik=0000003521 entityName=None top_keys=[]
+2026-02-28T21:09:45Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:45] START process_companyfacts_file
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:46] END process_companyfacts_file | started=2026-02-28T23:09:45 ended=2026-02-28T23:09:46 elapsed=0.39s
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000003545.json source=companyfacts: inserted=8417 dup=9586 elapsed=0.40s
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:46] START process_companyfacts_file
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:46] END process_companyfacts_file | started=2026-02-28T23:09:46 ended=2026-02-28T23:09:46 elapsed=0.47s
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000003570.json source=companyfacts: inserted=10526 dup=12056 elapsed=0.49s
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:46] START process_companyfacts_file
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:46] END process_companyfacts_file | started=2026-02-28T23:09:46 ended=2026-02-28T23:09:46 elapsed=0.05s
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000003673.json source=companyfacts: inserted=1368 dup=849 elapsed=0.06s
+2026-02-28T21:09:46Z WARNING sec_test.utils.populate_daily_values: Unprocessed file [companyfacts] companyfacts/CIK0000003794.json: missing_facts | cik=0000003794 entityName=None top_keys=['cik', 'entityName', 'facts']
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:46] START process_companyfacts_file
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:46] END process_companyfacts_file | started=2026-02-28T23:09:46 ended=2026-02-28T23:09:46 elapsed=0.01s
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000003952.json source=companyfacts: inserted=155 dup=77 elapsed=0.01s
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:46] START process_companyfacts_file
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:46] END process_companyfacts_file | started=2026-02-28T23:09:46 ended=2026-02-28T23:09:46 elapsed=0.00s
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000003982.json source=companyfacts: inserted=27 dup=9 elapsed=0.00s
+2026-02-28T21:09:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:46] START process_companyfacts_file
+2026-02-28T21:09:47Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:47] END process_companyfacts_file | started=2026-02-28T23:09:46 ended=2026-02-28T23:09:47 elapsed=0.48s
+2026-02-28T21:09:47Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000004127.json source=companyfacts: inserted=9912 dup=11062 elapsed=0.49s
+2026-02-28T21:09:47Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:47] START process_companyfacts_file
+2026-02-28T21:09:47Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:47] END process_companyfacts_file | started=2026-02-28T23:09:47 ended=2026-02-28T23:09:47 elapsed=0.19s
+2026-02-28T21:09:47Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000004187.json source=companyfacts: inserted=4592 dup=4456 elapsed=0.20s
+2026-02-28T21:09:47Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:47] START process_companyfacts_file
+2026-02-28T21:09:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:48] END process_companyfacts_file | started=2026-02-28T23:09:47 ended=2026-02-28T23:09:48 elapsed=0.68s
+2026-02-28T21:09:48Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000004281.json source=companyfacts: inserted=14306 dup=17642 elapsed=0.71s
+2026-02-28T21:09:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:48] START process_companyfacts_file
+2026-02-28T21:09:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:48] END process_companyfacts_file | started=2026-02-28T23:09:48 ended=2026-02-28T23:09:48 elapsed=0.54s
+2026-02-28T21:09:48Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000004447.json source=companyfacts: inserted=12100 dup=13559 elapsed=0.56s
+2026-02-28T21:09:48Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:48] START process_companyfacts_file
+2026-02-28T21:09:49Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:49] END process_companyfacts_file | started=2026-02-28T23:09:48 ended=2026-02-28T23:09:49 elapsed=0.60s
+2026-02-28T21:09:49Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000004457.json source=companyfacts: inserted=13553 dup=14335 elapsed=0.63s
+2026-02-28T21:09:49Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:49] START process_companyfacts_file
+2026-02-28T21:09:49Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:49] END process_companyfacts_file | started=2026-02-28T23:09:49 ended=2026-02-28T23:09:49 elapsed=0.10s
+2026-02-28T21:09:49Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000004515.json source=companyfacts: inserted=2116 dup=2027 elapsed=0.13s
+2026-02-28T21:09:49Z WARNING sec_test.utils.populate_daily_values: Unprocessed file [companyfacts] companyfacts/CIK0000004568.json: missing_facts | cik=0000004568 entityName=None top_keys=['cik', 'entityName', 'facts']
+2026-02-28T21:09:49Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:49] START process_companyfacts_file
+2026-02-28T21:09:49Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:49] END process_companyfacts_file | started=2026-02-28T23:09:49 ended=2026-02-28T23:09:49 elapsed=0.02s
+2026-02-28T21:09:49Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000004611.json source=companyfacts: inserted=403 dup=314 elapsed=0.02s
+2026-02-28T21:09:49Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:49] START process_companyfacts_file
+2026-02-28T21:09:49Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:49] END process_companyfacts_file | started=2026-02-28T23:09:49 ended=2026-02-28T23:09:49 elapsed=0.04s
+2026-02-28T21:09:49Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000004828.json source=companyfacts: inserted=1086 dup=610 elapsed=0.04s
+2026-02-28T21:09:49Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:49] START process_companyfacts_file
+2026-02-28T21:09:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:50] END process_companyfacts_file | started=2026-02-28T23:09:49 ended=2026-02-28T23:09:50 elapsed=0.75s
+2026-02-28T21:09:50Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000004904.json source=companyfacts: inserted=15666 dup=19708 elapsed=0.77s
+2026-02-28T21:09:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:50] START process_companyfacts_file
+2026-02-28T21:09:51Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:51] END process_companyfacts_file | started=2026-02-28T23:09:50 ended=2026-02-28T23:09:51 elapsed=0.82s
+2026-02-28T21:09:51Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000004962.json source=companyfacts: inserted=14726 dup=16389 elapsed=0.84s
+2026-02-28T21:09:51Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:51] START process_companyfacts_file
+2026-02-28T21:09:51Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:51] END process_companyfacts_file | started=2026-02-28T23:09:51 ended=2026-02-28T23:09:51 elapsed=0.18s
+2026-02-28T21:09:51Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000004969.json source=companyfacts: inserted=3675 dup=4747 elapsed=0.19s
+2026-02-28T21:09:51Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:51] START process_companyfacts_file
+2026-02-28T21:09:52Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:52] END process_companyfacts_file | started=2026-02-28T23:09:51 ended=2026-02-28T23:09:52 elapsed=0.74s
+2026-02-28T21:09:52Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000004977.json source=companyfacts: inserted=15480 dup=19027 elapsed=0.77s
+2026-02-28T21:09:52Z WARNING sec_test.utils.populate_daily_values: Unprocessed file [companyfacts] companyfacts/CIK0000005094.json: missing_facts | cik=0000005094 entityName=None top_keys=['cik', 'entityName', 'facts']
+2026-02-28T21:09:52Z WARNING sec_test.utils.populate_daily_values: Unprocessed file [companyfacts] companyfacts/CIK0000005108.json: missing_facts | cik=0000005108 entityName=None top_keys=['cik', 'entityName', 'facts']
+2026-02-28T21:09:52Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:52] START process_companyfacts_file
+2026-02-28T21:09:52Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:52] END process_companyfacts_file | started=2026-02-28T23:09:52 ended=2026-02-28T23:09:52 elapsed=0.04s
+2026-02-28T21:09:52Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000005117.json source=companyfacts: inserted=1175 dup=489 elapsed=0.04s
+2026-02-28T21:09:52Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:52] START process_companyfacts_file
+2026-02-28T21:09:52Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:52] END process_companyfacts_file | started=2026-02-28T23:09:52 ended=2026-02-28T23:09:52 elapsed=0.18s
+2026-02-28T21:09:52Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000005133.json source=companyfacts: inserted=3702 dup=4593 elapsed=0.19s
+2026-02-28T21:09:52Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:52] START process_companyfacts_file
+2026-02-28T21:09:52Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:52] END process_companyfacts_file | started=2026-02-28T23:09:52 ended=2026-02-28T23:09:52 elapsed=0.00s
+2026-02-28T21:09:52Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000005187.json source=companyfacts: inserted=164 dup=24 elapsed=0.01s
+2026-02-28T21:09:52Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:52] START process_companyfacts_file
+2026-02-28T21:09:53Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:53] END process_companyfacts_file | started=2026-02-28T23:09:52 ended=2026-02-28T23:09:53 elapsed=0.97s
+2026-02-28T21:09:53Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000005272.json source=companyfacts: inserted=19015 dup=25748 elapsed=1.00s
+2026-02-28T21:09:53Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:53] START process_companyfacts_file
+2026-02-28T21:09:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:54] END process_companyfacts_file | started=2026-02-28T23:09:53 ended=2026-02-28T23:09:54 elapsed=0.70s
+2026-02-28T21:09:54Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000005513.json source=companyfacts: inserted=15035 dup=18568 elapsed=0.73s
+2026-02-28T21:09:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:54] START process_companyfacts_file
+2026-02-28T21:09:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:54] END process_companyfacts_file | started=2026-02-28T23:09:54 ended=2026-02-28T23:09:54 elapsed=0.07s
+2026-02-28T21:09:54Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000005656.json source=companyfacts: inserted=1664 dup=1360 elapsed=0.08s
+2026-02-28T21:09:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:54] START process_companyfacts_file
+2026-02-28T21:09:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:54] END process_companyfacts_file | started=2026-02-28T23:09:54 ended=2026-02-28T23:09:54 elapsed=0.13s
+2026-02-28T21:09:54Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000005768.json source=companyfacts: inserted=2740 dup=3238 elapsed=0.13s
+2026-02-28T21:09:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:54] START process_companyfacts_file
+2026-02-28T21:09:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:54] END process_companyfacts_file | started=2026-02-28T23:09:54 ended=2026-02-28T23:09:54 elapsed=0.40s
+2026-02-28T21:09:54Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000005981.json source=companyfacts: inserted=8851 dup=10253 elapsed=0.42s
+2026-02-28T21:09:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:54] START process_companyfacts_file
+2026-02-28T21:09:55Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:55] END process_companyfacts_file | started=2026-02-28T23:09:54 ended=2026-02-28T23:09:55 elapsed=0.44s
+2026-02-28T21:09:55Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006176.json source=companyfacts: inserted=9631 dup=11140 elapsed=0.45s
+2026-02-28T21:09:55Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:55] START process_companyfacts_file
+2026-02-28T21:09:55Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:55] END process_companyfacts_file | started=2026-02-28T23:09:55 ended=2026-02-28T23:09:55 elapsed=0.47s
+2026-02-28T21:09:55Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006201.json source=companyfacts: inserted=9713 dup=11914 elapsed=0.49s
+2026-02-28T21:09:55Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:55] START process_companyfacts_file
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:56] END process_companyfacts_file | started=2026-02-28T23:09:55 ended=2026-02-28T23:09:56 elapsed=0.31s
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006207.json source=companyfacts: inserted=6612 dup=6255 elapsed=0.32s
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:56] START process_companyfacts_file
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:56] END process_companyfacts_file | started=2026-02-28T23:09:56 ended=2026-02-28T23:09:56 elapsed=0.61s
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006281.json source=companyfacts: inserted=13380 dup=15455 elapsed=0.63s
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:56] START process_companyfacts_file
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:56] END process_companyfacts_file | started=2026-02-28T23:09:56 ended=2026-02-28T23:09:56 elapsed=0.20s
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006284.json source=companyfacts: inserted=4969 dup=4846 elapsed=0.21s
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:56] START process_companyfacts_file
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:56] END process_companyfacts_file | started=2026-02-28T23:09:56 ended=2026-02-28T23:09:56 elapsed=0.03s
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006292.json source=companyfacts: inserted=931 dup=597 elapsed=0.04s
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:56] START process_companyfacts_file
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:56] END process_companyfacts_file | started=2026-02-28T23:09:56 ended=2026-02-28T23:09:56 elapsed=0.08s
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006314.json source=companyfacts: inserted=1837 dup=1289 elapsed=0.08s
+2026-02-28T21:09:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:56] START process_companyfacts_file
+2026-02-28T21:09:57Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:57] END process_companyfacts_file | started=2026-02-28T23:09:56 ended=2026-02-28T23:09:57 elapsed=0.21s
+2026-02-28T21:09:57Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006494.json source=companyfacts: inserted=5191 dup=4770 elapsed=0.22s
+2026-02-28T21:09:57Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:57] START process_companyfacts_file
+2026-02-28T21:09:57Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:57] END process_companyfacts_file | started=2026-02-28T23:09:57 ended=2026-02-28T23:09:57 elapsed=0.09s
+2026-02-28T21:09:57Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006732.json source=companyfacts: inserted=1861 dup=1992 elapsed=0.09s
+2026-02-28T21:09:57Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:57] START process_companyfacts_file
+2026-02-28T21:09:57Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:57] END process_companyfacts_file | started=2026-02-28T23:09:57 ended=2026-02-28T23:09:57 elapsed=0.60s
+2026-02-28T21:09:57Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006769.json source=companyfacts: inserted=11806 dup=16386 elapsed=0.62s
+2026-02-28T21:09:57Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:57] START process_companyfacts_file
+2026-02-28T21:09:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:58] END process_companyfacts_file | started=2026-02-28T23:09:57 ended=2026-02-28T23:09:58 elapsed=0.53s
+2026-02-28T21:09:58Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006845.json source=companyfacts: inserted=12340 dup=12186 elapsed=0.55s
+2026-02-28T21:09:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:58] START process_companyfacts_file
+2026-02-28T21:09:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:58] END process_companyfacts_file | started=2026-02-28T23:09:58 ended=2026-02-28T23:09:58 elapsed=0.00s
+2026-02-28T21:09:58Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006879.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:09:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:58] START process_companyfacts_file
+2026-02-28T21:09:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:58] END process_companyfacts_file | started=2026-02-28T23:09:58 ended=2026-02-28T23:09:58 elapsed=0.24s
+2026-02-28T21:09:58Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006885.json source=companyfacts: inserted=5007 dup=5502 elapsed=0.25s
+2026-02-28T21:09:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:58] START process_companyfacts_file
+2026-02-28T21:09:59Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:59] END process_companyfacts_file | started=2026-02-28T23:09:58 ended=2026-02-28T23:09:59 elapsed=0.62s
+2026-02-28T21:09:59Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006951.json source=companyfacts: inserted=13914 dup=15576 elapsed=0.64s
+2026-02-28T21:09:59Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:59] START process_companyfacts_file
+2026-02-28T21:09:59Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:59] END process_companyfacts_file | started=2026-02-28T23:09:59 ended=2026-02-28T23:09:59 elapsed=0.44s
+2026-02-28T21:09:59Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000006955.json source=companyfacts: inserted=10013 dup=10975 elapsed=0.45s
+2026-02-28T21:09:59Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:59] START process_companyfacts_file
+2026-02-28T21:09:59Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:59] END process_companyfacts_file | started=2026-02-28T23:09:59 ended=2026-02-28T23:09:59 elapsed=0.04s
+2026-02-28T21:09:59Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000007032.json source=companyfacts: inserted=1265 dup=745 elapsed=0.05s
+2026-02-28T21:09:59Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:09:59] START process_companyfacts_file
+2026-02-28T21:10:00Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:00] END process_companyfacts_file | started=2026-02-28T23:09:59 ended=2026-02-28T23:10:00 elapsed=0.33s
+2026-02-28T21:10:00Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000007039.json source=companyfacts: inserted=7084 dup=8811 elapsed=0.34s
+2026-02-28T21:10:00Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:00] START process_companyfacts_file
+2026-02-28T21:10:00Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:00] END process_companyfacts_file | started=2026-02-28T23:10:00 ended=2026-02-28T23:10:00 elapsed=0.66s
+2026-02-28T21:10:00Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000007084.json source=companyfacts: inserted=12860 dup=17169 elapsed=0.68s
+2026-02-28T21:10:00Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:00] START process_companyfacts_file
+2026-02-28T21:10:00Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:00] END process_companyfacts_file | started=2026-02-28T23:10:00 ended=2026-02-28T23:10:00 elapsed=0.01s
+2026-02-28T21:10:00Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000007286.json source=companyfacts: inserted=313 dup=90 elapsed=0.01s
+2026-02-28T21:10:00Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:00] START process_companyfacts_file
+2026-02-28T21:10:01Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:01] END process_companyfacts_file | started=2026-02-28T23:10:00 ended=2026-02-28T23:10:01 elapsed=0.51s
+2026-02-28T21:10:01Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000007332.json source=companyfacts: inserted=10929 dup=13424 elapsed=0.53s
+2026-02-28T21:10:01Z WARNING sec_test.utils.populate_daily_values: Unprocessed file [companyfacts] companyfacts/CIK0000007340.json: missing_facts | cik=0000007340 entityName=None top_keys=['cik', 'entityName', 'facts']
+2026-02-28T21:10:01Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:01] START process_companyfacts_file
+2026-02-28T21:10:01Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:01] END process_companyfacts_file | started=2026-02-28T23:10:01 ended=2026-02-28T23:10:01 elapsed=0.51s
+2026-02-28T21:10:01Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000007431.json source=companyfacts: inserted=11154 dup=13373 elapsed=0.54s
+2026-02-28T21:10:02Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:02] START process_companyfacts_file
+2026-02-28T21:10:02Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:02] END process_companyfacts_file | started=2026-02-28T23:10:02 ended=2026-02-28T23:10:02 elapsed=0.45s
+2026-02-28T21:10:02Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000007536.json source=companyfacts: inserted=9727 dup=11866 elapsed=0.47s
+2026-02-28T21:10:02Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:02] START process_companyfacts_file
+2026-02-28T21:10:02Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:02] END process_companyfacts_file | started=2026-02-28T23:10:02 ended=2026-02-28T23:10:02 elapsed=0.35s
+2026-02-28T21:10:02Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000007623.json source=companyfacts: inserted=8424 dup=8376 elapsed=0.37s
+2026-02-28T21:10:02Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:02] START process_companyfacts_file
+2026-02-28T21:10:03Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:03] END process_companyfacts_file | started=2026-02-28T23:10:02 ended=2026-02-28T23:10:03 elapsed=0.87s
+2026-02-28T21:10:03Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000007789.json source=companyfacts: inserted=19949 dup=21036 elapsed=0.90s
+2026-02-28T21:10:03Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:03] START process_companyfacts_file
+2026-02-28T21:10:03Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:03] END process_companyfacts_file | started=2026-02-28T23:10:03 ended=2026-02-28T23:10:03 elapsed=0.03s
+2026-02-28T21:10:03Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000007951.json source=companyfacts: inserted=813 dup=558 elapsed=0.04s
+2026-02-28T21:10:03Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:03] START process_companyfacts_file
+2026-02-28T21:10:04Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:04] END process_companyfacts_file | started=2026-02-28T23:10:03 ended=2026-02-28T23:10:04 elapsed=0.40s
+2026-02-28T21:10:04Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008063.json source=companyfacts: inserted=9028 dup=10321 elapsed=0.42s
+2026-02-28T21:10:04Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:04] START process_companyfacts_file
+2026-02-28T21:10:04Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:04] END process_companyfacts_file | started=2026-02-28T23:10:04 ended=2026-02-28T23:10:04 elapsed=0.41s
+2026-02-28T21:10:04Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008146.json source=companyfacts: inserted=9646 dup=10002 elapsed=0.43s
+2026-02-28T21:10:04Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:04] START process_companyfacts_file
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:05] END process_companyfacts_file | started=2026-02-28T23:10:04 ended=2026-02-28T23:10:05 elapsed=0.39s
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008177.json source=companyfacts: inserted=9261 dup=9613 elapsed=0.41s
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:05] START process_companyfacts_file
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:05] END process_companyfacts_file | started=2026-02-28T23:10:05 ended=2026-02-28T23:10:05 elapsed=0.26s
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008328.json source=companyfacts: inserted=5460 dup=6642 elapsed=0.27s
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:05] START process_companyfacts_file
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:05] END process_companyfacts_file | started=2026-02-28T23:10:05 ended=2026-02-28T23:10:05 elapsed=0.16s
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008411.json source=companyfacts: inserted=3942 dup=3854 elapsed=0.17s
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:05] START process_companyfacts_file
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:05] END process_companyfacts_file | started=2026-02-28T23:10:05 ended=2026-02-28T23:10:05 elapsed=0.05s
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008497.json source=companyfacts: inserted=1386 dup=774 elapsed=0.05s
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:05] START process_companyfacts_file
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:05] END process_companyfacts_file | started=2026-02-28T23:10:05 ended=2026-02-28T23:10:05 elapsed=0.42s
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008504.json source=companyfacts: inserted=8426 dup=8527 elapsed=0.43s
+2026-02-28T21:10:05Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:05] START process_companyfacts_file
+2026-02-28T21:10:06Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:06] END process_companyfacts_file | started=2026-02-28T23:10:05 ended=2026-02-28T23:10:06 elapsed=0.68s
+2026-02-28T21:10:06Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008670.json source=companyfacts: inserted=14850 dup=16658 elapsed=0.70s
+2026-02-28T21:10:06Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:06] START process_companyfacts_file
+2026-02-28T21:10:07Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:07] END process_companyfacts_file | started=2026-02-28T23:10:06 ended=2026-02-28T23:10:07 elapsed=0.45s
+2026-02-28T21:10:07Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008818.json source=companyfacts: inserted=10059 dup=11071 elapsed=0.47s
+2026-02-28T21:10:07Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:07] START process_companyfacts_file
+2026-02-28T21:10:07Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:07] END process_companyfacts_file | started=2026-02-28T23:10:07 ended=2026-02-28T23:10:07 elapsed=0.07s
+2026-02-28T21:10:07Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008855.json source=companyfacts: inserted=1744 dup=1716 elapsed=0.08s
+2026-02-28T21:10:07Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:07] START process_companyfacts_file
+2026-02-28T21:10:07Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:07] END process_companyfacts_file | started=2026-02-28T23:10:07 ended=2026-02-28T23:10:07 elapsed=0.49s
+2026-02-28T21:10:07Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008858.json source=companyfacts: inserted=9739 dup=10443 elapsed=0.52s
+2026-02-28T21:10:07Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:07] START process_companyfacts_file
+2026-02-28T21:10:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:08] END process_companyfacts_file | started=2026-02-28T23:10:07 ended=2026-02-28T23:10:08 elapsed=0.52s
+2026-02-28T21:10:08Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008868.json source=companyfacts: inserted=10836 dup=13935 elapsed=0.54s
+2026-02-28T21:10:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:08] START process_companyfacts_file
+2026-02-28T21:10:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:08] END process_companyfacts_file | started=2026-02-28T23:10:08 ended=2026-02-28T23:10:08 elapsed=0.43s
+2026-02-28T21:10:08Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000008947.json source=companyfacts: inserted=9575 dup=11049 elapsed=0.45s
+2026-02-28T21:10:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:08] START process_companyfacts_file
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:09] END process_companyfacts_file | started=2026-02-28T23:10:08 ended=2026-02-28T23:10:09 elapsed=0.36s
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000009092.json source=companyfacts: inserted=7449 dup=9459 elapsed=0.37s
+2026-02-28T21:10:09Z WARNING sec_test.utils.populate_daily_values: Unprocessed file [companyfacts] companyfacts/CIK0000009211.json: missing_facts | cik=0000009211 entityName=None top_keys=['cik', 'entityName', 'facts']
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:09] START process_companyfacts_file
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:09] END process_companyfacts_file | started=2026-02-28T23:10:09 ended=2026-02-28T23:10:09 elapsed=0.04s
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000009235.json source=companyfacts: inserted=872 dup=820 elapsed=0.04s
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:09] START process_companyfacts_file
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:09] END process_companyfacts_file | started=2026-02-28T23:10:09 ended=2026-02-28T23:10:09 elapsed=0.06s
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000009263.json source=companyfacts: inserted=1692 dup=1061 elapsed=0.06s
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:09] START process_companyfacts_file
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:09] END process_companyfacts_file | started=2026-02-28T23:10:09 ended=2026-02-28T23:10:09 elapsed=0.50s
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000009326.json source=companyfacts: inserted=11035 dup=12769 elapsed=0.51s
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:09] START process_companyfacts_file
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:09] END process_companyfacts_file | started=2026-02-28T23:10:09 ended=2026-02-28T23:10:09 elapsed=0.01s
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000009342.json source=companyfacts: inserted=364 dup=123 elapsed=0.02s
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:09] START process_companyfacts_file
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:09] END process_companyfacts_file | started=2026-02-28T23:10:09 ended=2026-02-28T23:10:09 elapsed=0.27s
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000009346.json source=companyfacts: inserted=5889 dup=6434 elapsed=0.28s
+2026-02-28T21:10:09Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:09] START process_companyfacts_file
+2026-02-28T21:10:10Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:10] END process_companyfacts_file | started=2026-02-28T23:10:09 ended=2026-02-28T23:10:10 elapsed=0.54s
+2026-02-28T21:10:10Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000009389.json source=companyfacts: inserted=11162 dup=14422 elapsed=0.56s
+2026-02-28T21:10:10Z WARNING sec_test.utils.populate_daily_values: Unprocessed file [companyfacts] companyfacts/CIK0000009521.json: missing_facts | cik=0000009521 entityName=None top_keys=['cik', 'entityName', 'facts']
+2026-02-28T21:10:10Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:10] START process_companyfacts_file
+2026-02-28T21:10:10Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:10] END process_companyfacts_file | started=2026-02-28T23:10:10 ended=2026-02-28T23:10:10 elapsed=0.34s
+2026-02-28T21:10:10Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000009631.json source=companyfacts: inserted=5035 dup=8402 elapsed=0.35s
+2026-02-28T21:10:10Z WARNING sec_test.utils.populate_daily_values: Unprocessed file [companyfacts] companyfacts/CIK0000009712.json: missing_facts | cik=0000009712 entityName=None top_keys=['cik', 'entityName', 'facts']
+2026-02-28T21:10:10Z WARNING sec_test.utils.populate_daily_values: Unprocessed file [companyfacts] companyfacts/CIK0000009713.json: missing_facts | cik=0000009713 entityName=None top_keys=['cik', 'entityName', 'facts']
+2026-02-28T21:10:10Z INFO sec_test.utils.populate_daily_values: Progress: 100/977248 files
+2026-02-28T21:10:10Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:10] START process_companyfacts_file
+2026-02-28T21:10:11Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:11] END process_companyfacts_file | started=2026-02-28T23:10:10 ended=2026-02-28T23:10:11 elapsed=0.23s
+2026-02-28T21:10:11Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000009892.json source=companyfacts: inserted=5484 dup=5479 elapsed=0.24s
+2026-02-28T21:10:11Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:11] START process_companyfacts_file
+2026-02-28T21:10:11Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:11] END process_companyfacts_file | started=2026-02-28T23:10:11 ended=2026-02-28T23:10:11 elapsed=0.40s
+2026-02-28T21:10:11Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000009984.json source=companyfacts: inserted=9000 dup=9953 elapsed=0.42s
+2026-02-28T21:10:11Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:11] START process_companyfacts_file
+2026-02-28T21:10:11Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:11] END process_companyfacts_file | started=2026-02-28T23:10:11 ended=2026-02-28T23:10:11 elapsed=0.41s
+2026-02-28T21:10:11Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000010048.json source=companyfacts: inserted=8942 dup=9822 elapsed=0.42s
+2026-02-28T21:10:11Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:11] START process_companyfacts_file
+2026-02-28T21:10:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:12] END process_companyfacts_file | started=2026-02-28T23:10:11 ended=2026-02-28T23:10:12 elapsed=0.32s
+2026-02-28T21:10:12Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000010254.json source=companyfacts: inserted=7029 dup=7978 elapsed=0.34s
+2026-02-28T21:10:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:12] START process_companyfacts_file
+2026-02-28T21:10:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:12] END process_companyfacts_file | started=2026-02-28T23:10:12 ended=2026-02-28T23:10:12 elapsed=0.42s
+2026-02-28T21:10:12Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000010329.json source=companyfacts: inserted=9378 dup=10283 elapsed=0.43s
+2026-02-28T21:10:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:12] START process_companyfacts_file
+2026-02-28T21:10:13Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:13] END process_companyfacts_file | started=2026-02-28T23:10:12 ended=2026-02-28T23:10:13 elapsed=0.63s
+2026-02-28T21:10:13Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000010456.json source=companyfacts: inserted=13274 dup=17092 elapsed=0.65s
+2026-02-28T21:10:13Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:13] START process_companyfacts_file
+2026-02-28T21:10:13Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:13] END process_companyfacts_file | started=2026-02-28T23:10:13 ended=2026-02-28T23:10:13 elapsed=0.46s
+2026-02-28T21:10:13Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000010795.json source=companyfacts: inserted=10108 dup=12259 elapsed=0.48s
+2026-02-28T21:10:13Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:13] START process_companyfacts_file
+2026-02-28T21:10:14Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:14] END process_companyfacts_file | started=2026-02-28T23:10:13 ended=2026-02-28T23:10:14 elapsed=0.26s
+2026-02-28T21:10:14Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000011199.json source=companyfacts: inserted=5849 dup=6438 elapsed=0.27s
+2026-02-28T21:10:14Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:14] START process_companyfacts_file
+2026-02-28T21:10:14Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:14] END process_companyfacts_file | started=2026-02-28T23:10:14 ended=2026-02-28T23:10:14 elapsed=0.61s
+2026-02-28T21:10:14Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts/CIK0000011544.json source=companyfacts: inserted=12942 dup=15826 elapsed=0.63s
+2026-02-28T21:10:14Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:10:14] START process_companyfacts_file
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:11:46] START process_companyfacts_file
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:11:46] END process_companyfacts_file | started=2026-02-28T23:11:46 ended=2026-02-28T23:11:46 elapsed=0.00s
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:11:46] START process_submissions_file
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:11:46] END process_submissions_file | started=2026-02-28T23:11:46 ended=2026-02-28T23:11:46 elapsed=0.00s
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:11:46] START main
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:11:46] START populate_daily_values total
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:11:46] START process_companyfacts_file
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:11:46] END process_companyfacts_file | started=2026-02-28T23:11:46 ended=2026-02-28T23:11:46 elapsed=0.00s
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:11:46] START process_submissions_file
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:11:46] END process_submissions_file | started=2026-02-28T23:11:46 ended=2026-02-28T23:11:46 elapsed=0.00s
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:11:46] END populate_daily_values total | started=2026-02-28T23:11:46 ended=2026-02-28T23:11:46 elapsed=0.00s
+2026-02-28T21:11:46Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:11:46] END main | started=2026-02-28T23:11:46 ended=2026-02-28T23:11:46 elapsed=0.00s
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:37:25] START process_companyfacts_file
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:37:25] END process_companyfacts_file | started=2026-02-28T23:37:25 ended=2026-02-28T23:37:25 elapsed=0.00s
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:37:25] START process_submissions_file
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:37:25] END process_submissions_file | started=2026-02-28T23:37:25 ended=2026-02-28T23:37:25 elapsed=0.00s
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:37:25] START main
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:37:25] START populate_daily_values total
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:37:25] START process_companyfacts_file
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:37:25] END process_companyfacts_file | started=2026-02-28T23:37:25 ended=2026-02-28T23:37:25 elapsed=0.00s
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:37:25] START process_submissions_file
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:37:25] END process_submissions_file | started=2026-02-28T23:37:25 ended=2026-02-28T23:37:25 elapsed=0.00s
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:37:25] END populate_daily_values total | started=2026-02-28T23:37:25 ended=2026-02-28T23:37:25 elapsed=0.01s
+2026-02-28T21:37:25Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:37:25] END main | started=2026-02-28T23:37:25 ended=2026-02-28T23:37:25 elapsed=0.01s
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:40:12] START process_companyfacts_file
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:40:12] END process_companyfacts_file | started=2026-02-28T23:40:12 ended=2026-02-28T23:40:12 elapsed=0.00s
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:40:12] START process_submissions_file
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:40:12] END process_submissions_file | started=2026-02-28T23:40:12 ended=2026-02-28T23:40:12 elapsed=0.00s
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:40:12] START main
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:40:12] START populate_daily_values total
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:40:12] START process_companyfacts_file
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:40:12] END process_companyfacts_file | started=2026-02-28T23:40:12 ended=2026-02-28T23:40:12 elapsed=0.00s
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:40:12] START process_submissions_file
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:40:12] END process_submissions_file | started=2026-02-28T23:40:12 ended=2026-02-28T23:40:12 elapsed=0.00s
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:40:12] END populate_daily_values total | started=2026-02-28T23:40:12 ended=2026-02-28T23:40:12 elapsed=0.01s
+2026-02-28T21:40:12Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:40:12] END main | started=2026-02-28T23:40:12 ended=2026-02-28T23:40:12 elapsed=0.01s
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:16] START process_companyfacts_file
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:16] END process_companyfacts_file | started=2026-02-28T23:41:16 ended=2026-02-28T23:41:16 elapsed=0.00s
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:16] START process_submissions_file
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:16] END process_submissions_file | started=2026-02-28T23:41:16 ended=2026-02-28T23:41:16 elapsed=0.00s
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:16] START main
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:16] START populate_daily_values total
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:16] START process_companyfacts_file
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:16] END process_companyfacts_file | started=2026-02-28T23:41:16 ended=2026-02-28T23:41:16 elapsed=0.00s
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:16] START process_submissions_file
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:16] END process_submissions_file | started=2026-02-28T23:41:16 ended=2026-02-28T23:41:16 elapsed=0.00s
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:16] END populate_daily_values total | started=2026-02-28T23:41:16 ended=2026-02-28T23:41:16 elapsed=0.01s
+2026-02-28T21:41:16Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:16] END main | started=2026-02-28T23:41:16 ended=2026-02-28T23:41:16 elapsed=0.01s
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:56] START process_companyfacts_file
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:56] END process_companyfacts_file | started=2026-02-28T23:41:56 ended=2026-02-28T23:41:56 elapsed=0.00s
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:56] START process_submissions_file
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:56] END process_submissions_file | started=2026-02-28T23:41:56 ended=2026-02-28T23:41:56 elapsed=0.00s
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:56] START main
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:56] START populate_daily_values total
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:56] START process_companyfacts_file
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:56] END process_companyfacts_file | started=2026-02-28T23:41:56 ended=2026-02-28T23:41:56 elapsed=0.00s
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:56] START process_submissions_file
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:56] END process_submissions_file | started=2026-02-28T23:41:56 ended=2026-02-28T23:41:56 elapsed=0.00s
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:56] END populate_daily_values total | started=2026-02-28T23:41:56 ended=2026-02-28T23:41:56 elapsed=0.01s
+2026-02-28T21:41:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:41:56] END main | started=2026-02-28T23:41:56 ended=2026-02-28T23:41:56 elapsed=0.01s
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:42:30] START process_companyfacts_file
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:42:30] END process_companyfacts_file | started=2026-02-28T23:42:30 ended=2026-02-28T23:42:30 elapsed=0.00s
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:42:30] START process_submissions_file
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:42:30] END process_submissions_file | started=2026-02-28T23:42:30 ended=2026-02-28T23:42:30 elapsed=0.00s
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:42:30] START main
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:42:30] START populate_daily_values total
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:42:30] START process_companyfacts_file
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:42:30] END process_companyfacts_file | started=2026-02-28T23:42:30 ended=2026-02-28T23:42:30 elapsed=0.00s
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:42:30] START process_submissions_file
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:42:30] END process_submissions_file | started=2026-02-28T23:42:30 ended=2026-02-28T23:42:30 elapsed=0.00s
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:42:30] END populate_daily_values total | started=2026-02-28T23:42:30 ended=2026-02-28T23:42:30 elapsed=0.01s
+2026-02-28T21:42:30Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:42:30] END main | started=2026-02-28T23:42:30 ended=2026-02-28T23:42:30 elapsed=0.01s
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:47:54] START process_companyfacts_file
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:47:54] END process_companyfacts_file | started=2026-02-28T23:47:54 ended=2026-02-28T23:47:54 elapsed=0.00s
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:47:54] START process_submissions_file
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:47:54] END process_submissions_file | started=2026-02-28T23:47:54 ended=2026-02-28T23:47:54 elapsed=0.00s
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:47:54] START main
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:47:54] START populate_daily_values total
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:47:54] START process_companyfacts_file
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:47:54] END process_companyfacts_file | started=2026-02-28T23:47:54 ended=2026-02-28T23:47:54 elapsed=0.00s
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:47:54] START process_submissions_file
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:47:54] END process_submissions_file | started=2026-02-28T23:47:54 ended=2026-02-28T23:47:54 elapsed=0.00s
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:47:54] END populate_daily_values total | started=2026-02-28T23:47:54 ended=2026-02-28T23:47:54 elapsed=0.01s
+2026-02-28T21:47:54Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:47:54] END main | started=2026-02-28T23:47:54 ended=2026-02-28T23:47:54 elapsed=0.01s
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:52:58] START process_companyfacts_file
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:52:58] END process_companyfacts_file | started=2026-02-28T23:52:58 ended=2026-02-28T23:52:58 elapsed=0.00s
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:52:58] START process_submissions_file
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:52:58] END process_submissions_file | started=2026-02-28T23:52:58 ended=2026-02-28T23:52:58 elapsed=0.00s
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:52:58] START main
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:52:58] START populate_daily_values total
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:52:58] START process_companyfacts_file
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:52:58] END process_companyfacts_file | started=2026-02-28T23:52:58 ended=2026-02-28T23:52:58 elapsed=0.00s
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=0 dup=1 elapsed=0.00s
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:52:58] START process_submissions_file
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:52:58] END process_submissions_file | started=2026-02-28T23:52:58 ended=2026-02-28T23:52:58 elapsed=0.00s
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=0 dup=3 elapsed=0.00s
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 0, Total duplicates skipped: 4, Files with errors: 0
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:52:58] END populate_daily_values total | started=2026-02-28T23:52:58 ended=2026-02-28T23:52:58 elapsed=0.01s
+2026-02-28T21:52:58Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:52:58] END main | started=2026-02-28T23:52:58 ended=2026-02-28T23:52:58 elapsed=0.01s
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:53:29] START process_companyfacts_file
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:53:29] END process_companyfacts_file | started=2026-02-28T23:53:29 ended=2026-02-28T23:53:29 elapsed=0.00s
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:53:29] START process_submissions_file
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:53:29] END process_submissions_file | started=2026-02-28T23:53:29 ended=2026-02-28T23:53:29 elapsed=0.00s
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:53:29] START main
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:53:29] START populate_daily_values total
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:53:29] START process_companyfacts_file
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:53:29] END process_companyfacts_file | started=2026-02-28T23:53:29 ended=2026-02-28T23:53:29 elapsed=0.00s
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:53:29] START process_submissions_file
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:53:29] END process_submissions_file | started=2026-02-28T23:53:29 ended=2026-02-28T23:53:29 elapsed=0.00s
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:53:29] END populate_daily_values total | started=2026-02-28T23:53:29 ended=2026-02-28T23:53:29 elapsed=0.01s
+2026-02-28T21:53:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:53:29] END main | started=2026-02-28T23:53:29 ended=2026-02-28T23:53:29 elapsed=0.01s
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:54:17] START process_companyfacts_file
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:54:17] END process_companyfacts_file | started=2026-02-28T23:54:17 ended=2026-02-28T23:54:17 elapsed=0.00s
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:54:17] START process_submissions_file
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:54:17] END process_submissions_file | started=2026-02-28T23:54:17 ended=2026-02-28T23:54:17 elapsed=0.00s
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:54:17] START main
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:54:17] START populate_daily_values total
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:54:17] START process_companyfacts_file
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:54:17] END process_companyfacts_file | started=2026-02-28T23:54:17 ended=2026-02-28T23:54:17 elapsed=0.00s
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:54:17] START process_submissions_file
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:54:17] END process_submissions_file | started=2026-02-28T23:54:17 ended=2026-02-28T23:54:17 elapsed=0.00s
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:54:17] END populate_daily_values total | started=2026-02-28T23:54:17 ended=2026-02-28T23:54:17 elapsed=0.01s
+2026-02-28T21:54:17Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:54:17] END main | started=2026-02-28T23:54:17 ended=2026-02-28T23:54:17 elapsed=0.01s
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:55:19] START process_companyfacts_file
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:55:19] END process_companyfacts_file | started=2026-02-28T23:55:19 ended=2026-02-28T23:55:19 elapsed=0.00s
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:55:19] START process_submissions_file
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:55:19] END process_submissions_file | started=2026-02-28T23:55:19 ended=2026-02-28T23:55:19 elapsed=0.00s
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:55:19] START main
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:55:19] START populate_daily_values total
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:55:19] START process_companyfacts_file
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:55:19] END process_companyfacts_file | started=2026-02-28T23:55:19 ended=2026-02-28T23:55:19 elapsed=0.00s
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:55:19] START process_submissions_file
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:55:19] END process_submissions_file | started=2026-02-28T23:55:19 ended=2026-02-28T23:55:19 elapsed=0.00s
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:55:19] END populate_daily_values total | started=2026-02-28T23:55:19 ended=2026-02-28T23:55:19 elapsed=0.01s
+2026-02-28T21:55:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:55:19] END main | started=2026-02-28T23:55:19 ended=2026-02-28T23:55:19 elapsed=0.01s
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:08] START process_companyfacts_file
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:08] END process_companyfacts_file | started=2026-02-28T23:56:08 ended=2026-02-28T23:56:08 elapsed=0.00s
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:08] START process_submissions_file
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:08] END process_submissions_file | started=2026-02-28T23:56:08 ended=2026-02-28T23:56:08 elapsed=0.00s
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:08] START main
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:08] START populate_daily_values total
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:08] START process_companyfacts_file
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:08] END process_companyfacts_file | started=2026-02-28T23:56:08 ended=2026-02-28T23:56:08 elapsed=0.00s
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:08] START process_submissions_file
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:08] END process_submissions_file | started=2026-02-28T23:56:08 ended=2026-02-28T23:56:08 elapsed=0.00s
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:08] END populate_daily_values total | started=2026-02-28T23:56:08 ended=2026-02-28T23:56:08 elapsed=0.01s
+2026-02-28T21:56:08Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:08] END main | started=2026-02-28T23:56:08 ended=2026-02-28T23:56:08 elapsed=0.01s
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:50] START process_companyfacts_file
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:50] END process_companyfacts_file | started=2026-02-28T23:56:50 ended=2026-02-28T23:56:50 elapsed=0.00s
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:50] START process_submissions_file
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:50] END process_submissions_file | started=2026-02-28T23:56:50 ended=2026-02-28T23:56:50 elapsed=0.00s
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:50] START main
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:50] START populate_daily_values total
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:50] START process_companyfacts_file
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:50] END process_companyfacts_file | started=2026-02-28T23:56:50 ended=2026-02-28T23:56:50 elapsed=0.00s
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:50] START process_submissions_file
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:50] END process_submissions_file | started=2026-02-28T23:56:50 ended=2026-02-28T23:56:50 elapsed=0.00s
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:50] END populate_daily_values total | started=2026-02-28T23:56:50 ended=2026-02-28T23:56:50 elapsed=0.01s
+2026-02-28T21:56:50Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:56:50] END main | started=2026-02-28T23:56:50 ended=2026-02-28T23:56:50 elapsed=0.01s
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:19] START process_companyfacts_file
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:19] END process_companyfacts_file | started=2026-02-28T23:57:19 ended=2026-02-28T23:57:19 elapsed=0.00s
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:19] START process_submissions_file
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:19] END process_submissions_file | started=2026-02-28T23:57:19 ended=2026-02-28T23:57:19 elapsed=0.00s
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:19] START main
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:19] START populate_daily_values total
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:19] START process_companyfacts_file
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:19] END process_companyfacts_file | started=2026-02-28T23:57:19 ended=2026-02-28T23:57:19 elapsed=0.00s
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:19] START process_submissions_file
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:19] END process_submissions_file | started=2026-02-28T23:57:19 ended=2026-02-28T23:57:19 elapsed=0.00s
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:19] END populate_daily_values total | started=2026-02-28T23:57:19 ended=2026-02-28T23:57:19 elapsed=0.01s
+2026-02-28T21:57:19Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:19] END main | started=2026-02-28T23:57:19 ended=2026-02-28T23:57:19 elapsed=0.01s
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:56] START process_companyfacts_file
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:56] END process_companyfacts_file | started=2026-02-28T23:57:56 ended=2026-02-28T23:57:56 elapsed=0.00s
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:56] START process_submissions_file
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:56] END process_submissions_file | started=2026-02-28T23:57:56 ended=2026-02-28T23:57:56 elapsed=0.00s
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:56] START main
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:56] START populate_daily_values total
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:56] START process_companyfacts_file
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:56] END process_companyfacts_file | started=2026-02-28T23:57:56 ended=2026-02-28T23:57:56 elapsed=0.00s
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:56] START process_submissions_file
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:56] END process_submissions_file | started=2026-02-28T23:57:56 ended=2026-02-28T23:57:56 elapsed=0.00s
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:56] END populate_daily_values total | started=2026-02-28T23:57:56 ended=2026-02-28T23:57:56 elapsed=0.01s
+2026-02-28T21:57:56Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:57:56] END main | started=2026-02-28T23:57:56 ended=2026-02-28T23:57:56 elapsed=0.01s
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:58:44] START process_companyfacts_file
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:58:44] END process_companyfacts_file | started=2026-02-28T23:58:44 ended=2026-02-28T23:58:44 elapsed=0.00s
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:58:44] START process_submissions_file
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:58:44] END process_submissions_file | started=2026-02-28T23:58:44 ended=2026-02-28T23:58:44 elapsed=0.00s
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:58:44] START main
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:58:44] START populate_daily_values total
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:58:44] START process_companyfacts_file
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:58:44] END process_companyfacts_file | started=2026-02-28T23:58:44 ended=2026-02-28T23:58:44 elapsed=0.00s
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:58:44] START process_submissions_file
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:58:44] END process_submissions_file | started=2026-02-28T23:58:44 ended=2026-02-28T23:58:44 elapsed=0.00s
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:58:44] END populate_daily_values total | started=2026-02-28T23:58:44 ended=2026-02-28T23:58:44 elapsed=0.01s
+2026-02-28T21:58:44Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:58:44] END main | started=2026-02-28T23:58:44 ended=2026-02-28T23:58:44 elapsed=0.01s
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:59:29] START process_companyfacts_file
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:59:29] END process_companyfacts_file | started=2026-02-28T23:59:29 ended=2026-02-28T23:59:29 elapsed=0.00s
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:59:29] START process_submissions_file
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:59:29] END process_submissions_file | started=2026-02-28T23:59:29 ended=2026-02-28T23:59:29 elapsed=0.00s
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:59:29] START main
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:59:29] START populate_daily_values total
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:59:29] START process_companyfacts_file
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:59:29] END process_companyfacts_file | started=2026-02-28T23:59:29 ended=2026-02-28T23:59:29 elapsed=0.00s
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:59:29] START process_submissions_file
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:59:29] END process_submissions_file | started=2026-02-28T23:59:29 ended=2026-02-28T23:59:29 elapsed=0.00s
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:59:29] END populate_daily_values total | started=2026-02-28T23:59:29 ended=2026-02-28T23:59:29 elapsed=0.01s
+2026-02-28T21:59:29Z INFO sec_test.utils.populate_daily_values: [2026-02-28 23:59:29] END main | started=2026-02-28T23:59:29 ended=2026-02-28T23:59:29 elapsed=0.01s
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:04:31] START process_companyfacts_file
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:04:31] END process_companyfacts_file | started=2026-03-01T00:04:31 ended=2026-03-01T00:04:31 elapsed=0.00s
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:04:31] START process_submissions_file
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:04:31] END process_submissions_file | started=2026-03-01T00:04:31 ended=2026-03-01T00:04:31 elapsed=0.00s
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:04:31] START main
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:04:31] START populate_daily_values total
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:04:31] START process_companyfacts_file
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:04:31] END process_companyfacts_file | started=2026-03-01T00:04:31 ended=2026-03-01T00:04:31 elapsed=0.00s
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:04:31] START process_submissions_file
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:04:31] END process_submissions_file | started=2026-03-01T00:04:31 ended=2026-03-01T00:04:31 elapsed=0.00s
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:04:31] END populate_daily_values total | started=2026-03-01T00:04:31 ended=2026-03-01T00:04:31 elapsed=0.01s
+2026-02-28T22:04:31Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:04:31] END main | started=2026-03-01T00:04:31 ended=2026-03-01T00:04:31 elapsed=0.01s
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:08:14] START process_companyfacts_file
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:08:14] END process_companyfacts_file | started=2026-03-01T00:08:14 ended=2026-03-01T00:08:14 elapsed=0.00s
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:08:14] START process_submissions_file
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:08:14] END process_submissions_file | started=2026-03-01T00:08:14 ended=2026-03-01T00:08:14 elapsed=0.00s
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:08:14] START main
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:08:14] START populate_daily_values total
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:08:14] START process_companyfacts_file
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:08:14] END process_companyfacts_file | started=2026-03-01T00:08:14 ended=2026-03-01T00:08:14 elapsed=0.00s
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:08:14] START process_submissions_file
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:08:14] END process_submissions_file | started=2026-03-01T00:08:14 ended=2026-03-01T00:08:14 elapsed=0.00s
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:08:14] END populate_daily_values total | started=2026-03-01T00:08:14 ended=2026-03-01T00:08:14 elapsed=0.01s
+2026-02-28T22:08:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:08:14] END main | started=2026-03-01T00:08:14 ended=2026-03-01T00:08:14 elapsed=0.01s
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:12:32] START process_companyfacts_file
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:12:32] END process_companyfacts_file | started=2026-03-01T00:12:32 ended=2026-03-01T00:12:32 elapsed=0.00s
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:12:32] START process_submissions_file
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:12:32] END process_submissions_file | started=2026-03-01T00:12:32 ended=2026-03-01T00:12:32 elapsed=0.00s
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:12:32] START main
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:12:32] START populate_daily_values total
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:12:32] START process_companyfacts_file
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:12:32] END process_companyfacts_file | started=2026-03-01T00:12:32 ended=2026-03-01T00:12:32 elapsed=0.00s
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:12:32] START process_submissions_file
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:12:32] END process_submissions_file | started=2026-03-01T00:12:32 ended=2026-03-01T00:12:32 elapsed=0.00s
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:12:32] END populate_daily_values total | started=2026-03-01T00:12:32 ended=2026-03-01T00:12:32 elapsed=0.01s
+2026-02-28T22:12:32Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:12:32] END main | started=2026-03-01T00:12:32 ended=2026-03-01T00:12:32 elapsed=0.01s
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:17:22] START process_companyfacts_file
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:17:22] END process_companyfacts_file | started=2026-03-01T00:17:22 ended=2026-03-01T00:17:22 elapsed=0.00s
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:17:22] START process_submissions_file
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:17:22] END process_submissions_file | started=2026-03-01T00:17:22 ended=2026-03-01T00:17:22 elapsed=0.00s
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:17:22] START main
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:17:22] START populate_daily_values total
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:17:22] START process_companyfacts_file
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:17:22] END process_companyfacts_file | started=2026-03-01T00:17:22 ended=2026-03-01T00:17:22 elapsed=0.00s
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:17:22] START process_submissions_file
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:17:22] END process_submissions_file | started=2026-03-01T00:17:22 ended=2026-03-01T00:17:22 elapsed=0.00s
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:17:22] END populate_daily_values total | started=2026-03-01T00:17:22 ended=2026-03-01T00:17:22 elapsed=0.01s
+2026-02-28T22:17:22Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:17:22] END main | started=2026-03-01T00:17:22 ended=2026-03-01T00:17:22 elapsed=0.01s
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:22:14] START process_companyfacts_file
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:22:14] END process_companyfacts_file | started=2026-03-01T00:22:14 ended=2026-03-01T00:22:14 elapsed=0.00s
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:22:14] START process_submissions_file
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:22:14] END process_submissions_file | started=2026-03-01T00:22:14 ended=2026-03-01T00:22:14 elapsed=0.00s
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:22:14] START main
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:22:14] START populate_daily_values total
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:22:14] START process_companyfacts_file
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:22:14] END process_companyfacts_file | started=2026-03-01T00:22:14 ended=2026-03-01T00:22:14 elapsed=0.00s
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:22:14] START process_submissions_file
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:22:14] END process_submissions_file | started=2026-03-01T00:22:14 ended=2026-03-01T00:22:14 elapsed=0.00s
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:22:14] END populate_daily_values total | started=2026-03-01T00:22:14 ended=2026-03-01T00:22:14 elapsed=0.01s
+2026-02-28T22:22:14Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:22:14] END main | started=2026-03-01T00:22:14 ended=2026-03-01T00:22:14 elapsed=0.01s
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:28:23] START process_companyfacts_file
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:28:23] END process_companyfacts_file | started=2026-03-01T00:28:23 ended=2026-03-01T00:28:23 elapsed=0.00s
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:28:23] START process_submissions_file
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:28:23] END process_submissions_file | started=2026-03-01T00:28:23 ended=2026-03-01T00:28:23 elapsed=0.00s
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:28:23] START main
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:28:23] START populate_daily_values total
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:28:23] START process_companyfacts_file
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:28:23] END process_companyfacts_file | started=2026-03-01T00:28:23 ended=2026-03-01T00:28:23 elapsed=0.00s
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:28:23] START process_submissions_file
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:28:23] END process_submissions_file | started=2026-03-01T00:28:23 ended=2026-03-01T00:28:23 elapsed=0.00s
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:28:23] END populate_daily_values total | started=2026-03-01T00:28:23 ended=2026-03-01T00:28:23 elapsed=0.01s
+2026-02-28T22:28:23Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:28:23] END main | started=2026-03-01T00:28:23 ended=2026-03-01T00:28:23 elapsed=0.01s
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:29:55] START process_companyfacts_file
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:29:55] END process_companyfacts_file | started=2026-03-01T00:29:55 ended=2026-03-01T00:29:55 elapsed=0.00s
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:29:55] START process_submissions_file
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:29:55] END process_submissions_file | started=2026-03-01T00:29:55 ended=2026-03-01T00:29:55 elapsed=0.00s
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:29:55] START main
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:29:55] START populate_daily_values total
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:29:55] START process_companyfacts_file
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:29:55] END process_companyfacts_file | started=2026-03-01T00:29:55 ended=2026-03-01T00:29:55 elapsed=0.00s
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:29:55] START process_submissions_file
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:29:55] END process_submissions_file | started=2026-03-01T00:29:55 ended=2026-03-01T00:29:55 elapsed=0.00s
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:29:55] END populate_daily_values total | started=2026-03-01T00:29:55 ended=2026-03-01T00:29:55 elapsed=0.01s
+2026-02-28T22:29:55Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:29:55] END main | started=2026-03-01T00:29:55 ended=2026-03-01T00:29:55 elapsed=0.01s
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:30:28] START process_companyfacts_file
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:30:28] END process_companyfacts_file | started=2026-03-01T00:30:28 ended=2026-03-01T00:30:28 elapsed=0.00s
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:30:28] START process_submissions_file
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:30:28] END process_submissions_file | started=2026-03-01T00:30:28 ended=2026-03-01T00:30:28 elapsed=0.00s
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:30:28] START main
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:30:28] START populate_daily_values total
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: Starting processing of 2 files.
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:30:28] START process_companyfacts_file
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:30:28] END process_companyfacts_file | started=2026-03-01T00:30:28 ended=2026-03-01T00:30:28 elapsed=0.00s
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: Completed file companyfacts_sample.json source=companyfacts: inserted=1 dup=0 elapsed=0.00s
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:30:28] START process_submissions_file
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:30:28] END process_submissions_file | started=2026-03-01T00:30:28 ended=2026-03-01T00:30:28 elapsed=0.00s
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: Completed file submissions_sample.json source=submissions: inserted=3 dup=0 elapsed=0.00s
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: Processing complete. Total files: 2, Total successful inserts: 4, Total duplicates skipped: 0, Files with errors: 0
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:30:28] END populate_daily_values total | started=2026-03-01T00:30:28 ended=2026-03-01T00:30:28 elapsed=0.01s
+2026-02-28T22:30:28Z INFO sec_test.utils.populate_daily_values: [2026-03-01 00:30:28] END main | started=2026-03-01T00:30:28 ended=2026-03-01T00:30:28 elapsed=0.01s

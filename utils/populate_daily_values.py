@@ -231,11 +231,18 @@ def _insert_daily_value_ignore(
     return bool(getattr(res, "rowcount", 0))
 
 
-def get_or_create_entity(cik, company_name: str | None = None):
+def get_or_create_entity(
+    cik, company_name: str | None = None, metadata: dict | None = None
+):
     """Get an `Entity` by CIK or create it.
 
     Optimized: avoids committing inside helper; caller controls transaction.
-    Also backfills `entity_metadata.company_name` when provided.
+    Also backfills `entity_metadata` fields when provided.
+
+    Args:
+        cik: The CIK identifier
+        company_name: Company name (legacy parameter, also in metadata dict)
+        metadata: Dict of metadata fields to populate in entity_metadata table
     """
     with session.no_autoflush:
         entity = session.query(Entity).filter_by(cik=cik).first()
@@ -245,15 +252,23 @@ def get_or_create_entity(cik, company_name: str | None = None):
         session.flush()  # assign PK without committing
 
     # Create/backfill metadata (1:1)
-    if company_name:
+    if company_name or metadata:
         with session.no_autoflush:
             meta = session.query(EntityMetadata).filter_by(entity_id=entity.id).first()
         if not meta:
-            meta = EntityMetadata(entity_id=entity.id, company_name=company_name)
+            meta = EntityMetadata(entity_id=entity.id)
             session.add(meta)
             session.flush()
-        elif not meta.company_name:
+
+        # Update company_name from either parameter
+        if company_name and not meta.company_name:
             meta.company_name = company_name
+
+        # Update all metadata fields if provided
+        if metadata:
+            for key, value in metadata.items():
+                if value and not getattr(meta, key, None):
+                    setattr(meta, key, value)
             session.flush()
 
     return entity
@@ -406,15 +421,155 @@ def infer_cik_from_filename(name: str) -> str | None:
     return "".join(digits) or None
 
 
-def extract_entity_identity(data: dict, filename: str) -> tuple[str | None, str | None]:
-    """Extract (cik10, company_name) from payload, falling back to filename."""
+def extract_metadata_from_submissions(data: dict) -> dict:
+    """Extract entity metadata fields from a submissions JSON payload.
+
+    Returns a dict with keys matching EntityMetadata column names.
+    """
+    metadata = {}
+
+    # Company name
+    name = data.get("name") or data.get("entityName") or data.get("companyName")
+    if name and isinstance(name, str):
+        metadata["company_name"] = name.strip()
+
+    # SIC (Standard Industrial Classification)
+    if data.get("sic"):
+        metadata["sic"] = str(data["sic"]).strip()
+    if data.get("sicDescription"):
+        metadata["sic_description"] = str(data["sicDescription"]).strip()
+
+    # Incorporation and fiscal info
+    if data.get("stateOfIncorporation"):
+        metadata["state_of_incorporation"] = str(data["stateOfIncorporation"]).strip()
+    if data.get("stateOfIncorporationDescription"):
+        metadata["state_of_incorporation_description"] = str(
+            data["stateOfIncorporationDescription"]
+        ).strip()
+    if data.get("fiscalYearEnd"):
+        metadata["fiscal_year_end"] = str(data["fiscalYearEnd"]).strip()
+
+    # Filer category and entity type
+    if data.get("category"):
+        metadata["filer_category"] = str(data["category"]).strip()
+    if data.get("entityType"):
+        metadata["entity_type"] = str(data["entityType"]).strip()
+
+    # Contact information
+    if data.get("website"):
+        metadata["website"] = str(data["website"]).strip()
+    if data.get("phone"):
+        metadata["phone"] = str(data["phone"]).strip()
+    if data.get("ein"):
+        metadata["ein"] = str(data["ein"]).strip()
+
+    # Additional entity info
+    if data.get("lei"):
+        metadata["lei"] = str(data["lei"]).strip()
+    if data.get("investorWebsite"):
+        metadata["investor_website"] = str(data["investorWebsite"]).strip()
+    if data.get("description"):
+        metadata["entity_description"] = str(data["description"]).strip()
+    if data.get("ownerOrg"):
+        metadata["owner_organization"] = str(data["ownerOrg"]).strip()
+
+    # Regulatory flags
+    if data.get("flags"):
+        metadata["sec_flags"] = str(data["flags"]).strip()
+    if "insiderTransactionForOwnerExists" in data:
+        metadata["has_insider_transactions_as_owner"] = int(
+            data["insiderTransactionForOwnerExists"]
+        )
+    if "insiderTransactionForIssuerExists" in data:
+        metadata["has_insider_transactions_as_issuer"] = int(
+            data["insiderTransactionForIssuerExists"]
+        )
+
+    # Trading info - serialize lists as JSON
+    if data.get("tickers") and isinstance(data["tickers"], list):
+        metadata["tickers"] = json.dumps(data["tickers"])
+    if data.get("exchanges") and isinstance(data["exchanges"], list):
+        metadata["exchanges"] = json.dumps(data["exchanges"])
+
+    # Former names - serialize as JSON
+    if data.get("formerNames") and isinstance(data["formerNames"], list):
+        # Convert ISO date strings to YYYY-MM-DD format for readability
+        former_names = []
+        for fn in data["formerNames"]:
+            if isinstance(fn, dict) and fn.get("name"):
+                entry = {"name": fn["name"]}
+                # Parse ISO dates if present
+                if fn.get("from"):
+                    entry["from"] = (
+                        fn["from"][:10] if len(fn["from"]) >= 10 else fn["from"]
+                    )
+                if fn.get("to"):
+                    entry["to"] = fn["to"][:10] if len(fn["to"]) >= 10 else fn["to"]
+                former_names.append(entry)
+        if former_names:
+            metadata["former_names"] = json.dumps(former_names)
+
+    # Business address
+    addresses = data.get("addresses", {})
+    if isinstance(addresses, dict):
+        business = addresses.get("business", {})
+        if isinstance(business, dict):
+            if business.get("street1"):
+                metadata["business_street1"] = str(business["street1"]).strip()
+            if business.get("street2"):
+                metadata["business_street2"] = str(business["street2"]).strip()
+            if business.get("city"):
+                metadata["business_city"] = str(business["city"]).strip()
+            if business.get("stateOrCountry"):
+                metadata["business_state"] = str(business["stateOrCountry"]).strip()
+            if business.get("zipCode"):
+                metadata["business_zipcode"] = str(business["zipCode"]).strip()
+            # Some submissions have country field
+            if business.get("country"):
+                metadata["business_country"] = str(business["country"]).strip()
+
+        # Mailing address (may differ from business address)
+        mailing = addresses.get("mailing", {})
+        if isinstance(mailing, dict):
+            if mailing.get("street1"):
+                metadata["mailing_street1"] = str(mailing["street1"]).strip()
+            if mailing.get("street2"):
+                metadata["mailing_street2"] = str(mailing["street2"]).strip()
+            if mailing.get("city"):
+                metadata["mailing_city"] = str(mailing["city"]).strip()
+            if mailing.get("stateOrCountry"):
+                metadata["mailing_state"] = str(mailing["stateOrCountry"]).strip()
+            if mailing.get("zipCode"):
+                metadata["mailing_zipcode"] = str(mailing["zipCode"]).strip()
+            if mailing.get("country"):
+                metadata["mailing_country"] = str(mailing["country"]).strip()
+
+    return metadata
+
+
+def extract_entity_identity(
+    data: dict, filename: str
+) -> tuple[str | None, str | None, dict]:
+    """Extract (cik10, company_name, metadata_dict) from payload, falling back to filename.
+
+    Returns:
+        - cik: normalized 10-digit CIK
+        - company_name: company name string or None
+        - metadata: dict of additional metadata fields (empty dict if none found)
+    """
     cik = _normalize_cik(data.get("cik"))
     if not cik:
         inferred = infer_cik_from_filename(filename)
         cik = _normalize_cik(inferred)
     company_name = data.get("entityName") or data.get("name") or data.get("companyName")
     company_name = company_name.strip() if isinstance(company_name, str) else None
-    return cik, company_name
+
+    # Extract metadata if this is a submissions file (has more fields)
+    metadata = {}
+    if data.get("sic") or data.get("stateOfIncorporation") or data.get("addresses"):
+        metadata = extract_metadata_from_submissions(data)
+
+    return cik, company_name, metadata
 
 
 def _resolve_recent_payload(data: dict):
@@ -714,14 +869,18 @@ def main():
             if len(skip_reason_samples[reason]) < limit:
                 skip_reason_samples[reason].append(fname)
 
-        def get_entity_id_cached(cik: str, company_name: str | None = None) -> int:
+        def get_entity_id_cached(
+            cik: str, company_name: str | None = None, metadata: dict | None = None
+        ) -> int:
             key = cik
             if key in entity_cache:
-                # still backfill name via DB if needed
-                if company_name:
-                    get_or_create_entity(cik, company_name)
+                # still backfill name/metadata via DB if needed
+                if company_name or metadata:
+                    get_or_create_entity(cik, company_name, metadata)
                 return entity_cache[key]
-            entity_id = get_or_create_entity(cik, company_name=company_name).id
+            entity_id = get_or_create_entity(
+                cik, company_name=company_name, metadata=metadata
+            ).id
             entity_cache[key] = entity_id
             return entity_id
 
@@ -787,7 +946,7 @@ def main():
                     )
                     continue
 
-                cik, company_name = extract_entity_identity(data, filename)
+                cik, company_name, metadata = extract_entity_identity(data, filename)
                 if not cik:
                     _log_unprocessed(
                         source=source,
@@ -800,7 +959,9 @@ def main():
                     )
                     continue
 
-                entity_id = get_entity_id_cached(cik, company_name=company_name)
+                entity_id = get_entity_id_cached(
+                    cik, company_name=company_name, metadata=metadata
+                )
 
                 inserts_planned = 0
                 duplicates = 0

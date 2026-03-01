@@ -61,15 +61,19 @@ def test_extract_entity_identity_prefers_payload_but_falls_back_to_filename(
     sample_companyfacts_dict,
 ):
     m = _load_script_module()
-    cik, name = m.extract_entity_identity(
+    cik, name, metadata = m.extract_entity_identity(
         sample_companyfacts_dict, "CIK0000001750.json"
     )
     assert cik == "0000001750"
     assert name == "AAR CORP."
+    assert isinstance(metadata, dict)
 
-    cik2, name2 = m.extract_entity_identity({"entityName": "X"}, "CIK0000009999.json")
+    cik2, name2, metadata2 = m.extract_entity_identity(
+        {"entityName": "X"}, "CIK0000009999.json"
+    )
     assert cik2 == "0000009999"
     assert name2 == "X"
+    assert isinstance(metadata2, dict)
 
 
 def test_iter_companyfacts_points(sample_companyfacts_dict):
