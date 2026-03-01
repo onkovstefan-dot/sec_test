@@ -52,6 +52,328 @@ def create_index_if_missing(cur: sqlite3.Cursor, *, name: str, ddl: str) -> bool
     return True
 
 
+def create_table_if_missing(cur: sqlite3.Cursor, *, table: str, ddl: str) -> bool:
+    """Create a table if it does not already exist.
+
+    Args:
+        table: Table name.
+        ddl: Full CREATE TABLE statement.
+
+    Returns:
+        True if created, False if already exists.
+    """
+    cur.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=? LIMIT 1", (table,)
+    )
+    if cur.fetchone():
+        return False
+    cur.execute(ddl)
+    return True
+
+
+def create_data_sources_table_if_missing(cur: sqlite3.Cursor) -> bool:
+    """Idempotently create the data_sources registry table."""
+
+    ddl = """
+    CREATE TABLE data_sources (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        display_name TEXT NULL,
+        description TEXT NULL,
+        created_at DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+        CONSTRAINT uq_data_sources_name UNIQUE (name)
+    );
+    """.strip()
+
+    return create_table_if_missing(cur, table="data_sources", ddl=ddl)
+
+
+def seed_data_sources_if_missing(cur: sqlite3.Cursor) -> bool:
+    """Seed initial canonical sources.
+
+    Uses INSERT OR IGNORE so it is safe to re-run.
+
+    Seed set is intentionally small; add to it as new sources are integrated.
+    """
+
+    # If table does not exist yet, nothing to do.
+    cur.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=? LIMIT 1",
+        ("data_sources",),
+    )
+    if cur.fetchone() is None:
+        return False
+
+    before = cur.execute("SELECT COUNT(*) FROM data_sources").fetchone()[0]
+
+    cur.executemany(
+        """
+        INSERT OR IGNORE INTO data_sources(name, display_name, description)
+        VALUES(?, ?, ?)
+        """.strip(),
+        [
+            ("sec", "SEC EDGAR", "US SEC EDGAR filings and XBRL-derived facts"),
+            ("gleif", "GLEIF", "Global Legal Entity Identifier Foundation"),
+        ],
+    )
+
+    after = cur.execute("SELECT COUNT(*) FROM data_sources").fetchone()[0]
+    return after != before
+
+
+def create_entity_relationships_table_if_missing(cur: sqlite3.Cursor) -> bool:
+    """Idempotently create the entity_relationships table."""
+
+    # Note: SQLite only enforces FK constraints if PRAGMA foreign_keys=ON.
+    ddl = """
+    CREATE TABLE entity_relationships (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        parent_entity_id INTEGER NOT NULL,
+        child_entity_id INTEGER NOT NULL,
+        relationship_type TEXT NOT NULL,
+        ownership_pct REAL NULL,
+        effective_from DATE NULL,
+        effective_to DATE NULL,
+        source TEXT NULL,
+        CONSTRAINT uq_entity_relationships_parent_child_type
+            UNIQUE (parent_entity_id, child_entity_id, relationship_type),
+        FOREIGN KEY(parent_entity_id) REFERENCES entities(id) ON DELETE CASCADE,
+        FOREIGN KEY(child_entity_id) REFERENCES entities(id) ON DELETE CASCADE
+    );
+    """.strip()
+
+    changed = create_table_if_missing(cur, table="entity_relationships", ddl=ddl)
+
+    # Useful indexes for lookups.
+    changed |= create_index_if_missing(
+        cur,
+        name="ix_entity_relationships_parent_entity_id",
+        ddl=(
+            "CREATE INDEX ix_entity_relationships_parent_entity_id "
+            "ON entity_relationships(parent_entity_id)"
+        ),
+    )
+    changed |= create_index_if_missing(
+        cur,
+        name="ix_entity_relationships_child_entity_id",
+        ddl=(
+            "CREATE INDEX ix_entity_relationships_child_entity_id "
+            "ON entity_relationships(child_entity_id)"
+        ),
+    )
+
+    return changed
+
+
+def create_sec_filings_table_if_missing(cur: sqlite3.Cursor) -> bool:
+    """Idempotently create the sec_filings table."""
+
+    ddl = """
+    CREATE TABLE sec_filings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entity_id INTEGER NOT NULL,
+        accession_number TEXT NOT NULL,
+        form_type TEXT NOT NULL,
+        filing_date DATE NULL,
+        report_date DATE NULL,
+        primary_document TEXT NULL,
+        index_url TEXT NULL,
+        document_url TEXT NULL,
+        full_text_url TEXT NULL,
+        fetched_at DATETIME NULL,
+        fetch_status TEXT NOT NULL DEFAULT 'pending',
+        source TEXT NOT NULL DEFAULT 'sec_submissions_local',
+        CONSTRAINT uq_sec_filings_entity_accession
+            UNIQUE (entity_id, accession_number),
+        FOREIGN KEY(entity_id) REFERENCES entities(id) ON DELETE CASCADE
+    );
+    """.strip()
+
+    changed = create_table_if_missing(cur, table="sec_filings", ddl=ddl)
+
+    changed |= create_index_if_missing(
+        cur,
+        name="ix_sec_filings_entity_id",
+        ddl="CREATE INDEX ix_sec_filings_entity_id ON sec_filings(entity_id)",
+    )
+    changed |= create_index_if_missing(
+        cur,
+        name="ix_sec_filings_accession_number",
+        ddl=(
+            "CREATE INDEX ix_sec_filings_accession_number "
+            "ON sec_filings(accession_number)"
+        ),
+    )
+
+    return changed
+
+
+def create_sec_tickers_table_if_missing(cur: sqlite3.Cursor) -> bool:
+    """Idempotently create the sec_tickers table."""
+
+    ddl = """
+    CREATE TABLE sec_tickers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entity_id INTEGER NOT NULL,
+        ticker TEXT NOT NULL,
+        exchange TEXT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        source TEXT NOT NULL DEFAULT 'sec_submissions_local',
+        CONSTRAINT uq_sec_tickers_ticker_exchange
+            UNIQUE (ticker, exchange),
+        FOREIGN KEY(entity_id) REFERENCES entities(id) ON DELETE CASCADE
+    );
+    """.strip()
+
+    changed = create_table_if_missing(cur, table="sec_tickers", ddl=ddl)
+
+    changed |= create_index_if_missing(
+        cur,
+        name="ix_sec_tickers_entity_id",
+        ddl="CREATE INDEX ix_sec_tickers_entity_id ON sec_tickers(entity_id)",
+    )
+    changed |= create_index_if_missing(
+        cur,
+        name="ix_sec_tickers_ticker",
+        ddl="CREATE INDEX ix_sec_tickers_ticker ON sec_tickers(ticker)",
+    )
+    changed |= create_index_if_missing(
+        cur,
+        name="ix_sec_tickers_exchange",
+        ddl="CREATE INDEX ix_sec_tickers_exchange ON sec_tickers(exchange)",
+    )
+
+    return changed
+
+
+def create_sec_filing_documents_table_if_missing(cur: sqlite3.Cursor) -> bool:
+    """Idempotently create the sec_filing_documents table."""
+
+    ddl = """
+    CREATE TABLE sec_filing_documents (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        filing_id INTEGER NOT NULL,
+        doc_type TEXT NOT NULL,
+        filename TEXT NULL,
+        local_path TEXT NULL,
+        url TEXT NULL,
+        size_bytes INTEGER NULL,
+        fetched_at DATETIME NULL,
+        fetch_status TEXT NOT NULL DEFAULT 'pending',
+        CONSTRAINT uq_sec_filing_documents_filing_doc_type
+            UNIQUE (filing_id, doc_type),
+        FOREIGN KEY(filing_id) REFERENCES sec_filings(id) ON DELETE CASCADE
+    );
+    """.strip()
+
+    changed = create_table_if_missing(cur, table="sec_filing_documents", ddl=ddl)
+
+    changed |= create_index_if_missing(
+        cur,
+        name="ix_sec_filing_documents_filing_id",
+        ddl=(
+            "CREATE INDEX ix_sec_filing_documents_filing_id "
+            "ON sec_filing_documents(filing_id)"
+        ),
+    )
+
+    return changed
+
+
+def migrate_entity_identifiers_audit_columns(cur: sqlite3.Cursor) -> bool:
+    """Add auditability columns to entity_identifiers (idempotent).
+
+    - confidence: TEXT NOT NULL DEFAULT 'authoritative'
+    - added_at: DATETIME NOT NULL DEFAULT (UTC timestamp at insert time)
+    - last_seen_at: DATETIME NULL
+
+    Note: SQLite cannot use Python callables as DEFAULTs in ALTER TABLE.
+    We use SQLite's CURRENT_TIMESTAMP which is UTC.
+    """
+
+    changed = False
+    changed |= add_column_if_missing(
+        cur,
+        "entity_identifiers",
+        "confidence",
+        "TEXT NOT NULL DEFAULT 'authoritative'",
+    )
+    changed |= add_column_if_missing(
+        cur,
+        "entity_identifiers",
+        "added_at",
+        "DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP)",
+    )
+    changed |= add_column_if_missing(
+        cur,
+        "entity_identifiers",
+        "last_seen_at",
+        "DATETIME NULL",
+    )
+    return changed
+
+
+def migrate_file_processing_tracking_columns(cur: sqlite3.Cursor) -> bool:
+    """Add tracking columns to file_processing (idempotent).
+
+    - source: TEXT NOT NULL DEFAULT 'local'
+    - record_count: INTEGER NULL
+    """
+
+    changed = False
+    changed |= add_column_if_missing(
+        cur,
+        "file_processing",
+        "source",
+        "TEXT NOT NULL DEFAULT 'local'",
+    )
+    changed |= add_column_if_missing(
+        cur,
+        "file_processing",
+        "record_count",
+        "INTEGER NULL",
+    )
+    return changed
+
+
+def migrate_multisource_schema_columns(cur: sqlite3.Cursor) -> bool:
+    """Add multi-source / traceability columns (idempotent)."""
+
+    changed = False
+
+    # value_names
+    changed |= add_column_if_missing(cur, "value_names", "namespace", "TEXT NULL")
+
+    # daily_values
+    changed |= add_column_if_missing(cur, "daily_values", "source", "TEXT NULL")
+    changed |= add_column_if_missing(cur, "daily_values", "period_type", "TEXT NULL")
+    changed |= add_column_if_missing(
+        cur,
+        "daily_values",
+        "start_date_id",
+        "INTEGER NULL REFERENCES dates(id)",
+    )
+    changed |= add_column_if_missing(
+        cur,
+        "daily_values",
+        "accession_number",
+        "TEXT NULL",
+    )
+
+    # entity_metadata
+    changed |= add_column_if_missing(
+        cur, "entity_metadata", "data_sources", "TEXT NULL"
+    )
+    changed |= add_column_if_missing(
+        cur,
+        "entity_metadata",
+        "last_sec_sync_at",
+        "DATETIME NULL",
+    )
+
+    return changed
+
+
 def main() -> None:
     if not os.path.exists(DB_PATH):
         raise SystemExit(f"DB not found: {DB_PATH}")
@@ -61,6 +383,21 @@ def main() -> None:
         cur = con.cursor()
 
         changed = False
+
+        # --- new tables ---
+        changed |= create_data_sources_table_if_missing(cur)
+        changed |= create_entity_relationships_table_if_missing(cur)
+        changed |= create_sec_filings_table_if_missing(cur)
+        changed |= create_sec_tickers_table_if_missing(cur)
+        changed |= create_sec_filing_documents_table_if_missing(cur)
+
+        # Seed lookup tables.
+        changed |= seed_data_sources_if_missing(cur)
+
+        # --- column migrations ---
+        changed |= migrate_entity_identifiers_audit_columns(cur)
+        changed |= migrate_file_processing_tracking_columns(cur)
+        changed |= migrate_multisource_schema_columns(cur)
 
         # entity_metadata: add new metadata columns
         changed |= add_column_if_missing(cur, "entity_metadata", "sic", "TEXT")

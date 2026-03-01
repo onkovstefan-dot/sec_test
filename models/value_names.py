@@ -10,6 +10,9 @@ class ValueName(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, unique=True, nullable=False)
 
+    # Optional higher-level namespace (e.g. 'us-gaap', 'dei', 'ifrs-full').
+    namespace = Column(String, nullable=True)
+
     # Unit of measure (nullable; treat NULL as NA).
     unit_id = Column(Integer, ForeignKey("units.id"), nullable=True)
 

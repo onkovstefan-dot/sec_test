@@ -1,9 +1,18 @@
 from __future__ import annotations
 
-from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint, Index
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    Index,
+)
 from sqlalchemy.orm import relationship
 
 from models import Base
+from utils.time_utils import utcnow_sa_default
 
 
 class EntityIdentifier(Base):
@@ -49,5 +58,10 @@ class EntityIdentifier(Base):
     # Optional context.
     country = Column(String, nullable=True)
     issuer = Column(String, nullable=True)  # e.g. 'sec', 'gleif', 'companies_house'
+
+    # Auditability.
+    confidence = Column(String, nullable=False, default="authoritative")
+    added_at = Column(DateTime, nullable=False, default=utcnow_sa_default)
+    last_seen_at = Column(DateTime, nullable=True)
 
     entity = relationship("Entity")

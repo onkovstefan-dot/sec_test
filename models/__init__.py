@@ -18,9 +18,14 @@ from db import Base  # re-export a single shared Base
 # Keep imports local to this package to avoid circular dependencies in app code.
 from models.entities import Entity  # noqa: F401
 from models.entity_identifiers import EntityIdentifier  # noqa: F401
+from models.entity_relationships import EntityRelationship  # noqa: F401
 from models.entity_metadata import EntityMetadata  # noqa: F401
 from models.dates import DateEntry  # noqa: F401
 from models.units import Unit  # noqa: F401
 from models.value_names import ValueName  # noqa: F401
 from models.daily_values import DailyValue  # noqa: F401
 from models.file_processing import FileProcessing  # noqa: F401
+from models.sec_filings import SecFiling  # noqa: F401
+from models.sec_tickers import SecTicker  # noqa: F401
+from models.sec_filing_documents import SecFilingDocument  # noqa: F401
+from models.data_sources import DataSource  # noqa: F401

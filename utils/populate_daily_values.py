@@ -66,6 +66,8 @@ from models.file_processing import FileProcessing
 from models.units import Unit
 from models.value_names import ValueName
 from models.entity_identifiers import EntityIdentifier
+from models.sec_filings import SecFiling
+from models.sec_tickers import SecTicker
 from utils.time_utils import parse_ymd_date, utcnow
 
 import uuid
@@ -349,20 +351,76 @@ def _insert_daily_value_ignore(
 
 
 def _normalize_identifier_value(scheme: str, value: str) -> str:
-    """Normalize identifier values for consistent strict matching."""
+    """Normalize identifier values for consistent strict matching.
+
+    Error behavior:
+    - For known schemes with a defined format, invalid inputs raise ValueError.
+    - This avoids silently creating incorrect (scheme, value) rows.
+    """
+
+    # NOTE: Some schemes (e.g. eu_vat) treat internal whitespace as non-significant.
+    # We therefore apply scheme-specific normalization before deciding the value is empty.
+    scheme_l = (scheme or "").strip().lower()
+
+    if scheme_l == "eu_vat":
+        vat = "".join((value or "").split()).upper()
+        if not vat:
+            raise ValueError(f"Invalid EU VAT: {value!r}")
+        return vat
+
     v = (value or "").strip()
     if not v:
         return v
 
-    scheme_l = (scheme or "").strip().lower()
-
     if scheme_l in {"sec_cik", "cik"}:
         # store CIK as 10-digit zero padded
         n = _normalize_cik(v)
-        return n or v
+        if not n:
+            raise ValueError(f"Invalid SEC CIK: {value!r}")
+        return n
 
     if scheme_l in {"gleif_lei", "lei"}:
-        return v.upper()
+        lei = v.upper()
+        if len(lei) != 20 or not lei.isalnum():
+            raise ValueError(f"Invalid LEI (expected 20 alnum chars): {value!r}")
+        return lei
+
+    if scheme_l == "isin":
+        isin = v.upper()
+        if len(isin) != 12:
+            raise ValueError(f"Invalid ISIN (expected 12 chars): {value!r}")
+        return isin
+
+    if scheme_l == "gb_companies_house":
+        digits = "".join(ch for ch in v if ch.isdigit())
+        if not digits:
+            raise ValueError(f"Invalid Companies House number: {value!r}")
+        if len(digits) > 8:
+            raise ValueError(
+                f"Invalid Companies House number (max 8 digits): {value!r}"
+            )
+        return digits.zfill(8)
+
+    if scheme_l == "fr_siren":
+        digits = "".join(ch for ch in v if ch.isdigit())
+        if len(digits) != 9:
+            raise ValueError(f"Invalid SIREN (expected 9 digits): {value!r}")
+        return digits
+
+    # eu_vat handled above (before the empty-check)
+
+    if scheme_l == "ticker_exchange":
+        s = v.upper().replace(" ", "")
+        if ":" not in s:
+            raise ValueError(
+                f"Invalid ticker_exchange (expected 'TICKER:MIC'): {value!r}"
+            )
+        ticker, mic = s.split(":", 1)
+        if not ticker or not mic:
+            raise ValueError(
+                f"Invalid ticker_exchange (expected 'TICKER:MIC'): {value!r}"
+            )
+        return f"{ticker}:{mic}"
 
     # Default: trim only.
     return v
@@ -375,6 +433,19 @@ def _scheme_alias(scheme: str) -> str:
         return "sec_cik"
     if s in {"lei", "gleif", "gleif-lei", "gleif_lei"}:
         return "gleif_lei"
+    if s in {
+        "companies_house",
+        "companieshouse",
+        "gb_companies_house",
+        "uk_companies_house",
+    }:
+        return "gb_companies_house"
+    if s in {"siren", "fr_siren"}:
+        return "fr_siren"
+    if s in {"vat", "eu_vat"}:
+        return "eu_vat"
+    if s in {"ticker", "ticker_exchange"}:
+        return "ticker_exchange"
     return s
 
 
@@ -404,6 +475,21 @@ def _get_or_create_entity_identifier(
                 params=None,
                 orig=None,
             )
+
+        # Update "last seen" and backfill context on any successful match.
+        changed = False
+        if country and not existing.country:
+            existing.country = country
+            changed = True
+        if issuer and not existing.issuer:
+            existing.issuer = issuer
+            changed = True
+        if hasattr(existing, "last_seen_at"):
+            existing.last_seen_at = utcnow()
+            changed = True
+        if changed:
+            session.flush()
+
         return existing
 
     ident = EntityIdentifier(
@@ -413,6 +499,16 @@ def _get_or_create_entity_identifier(
         country=country,
         issuer=issuer,
     )
+
+    # If the model supports audit columns, set them explicitly to avoid relying on
+    # DB defaults (important for tests and for older SQLite ALTER defaults).
+    if hasattr(ident, "added_at"):
+        ident.added_at = utcnow()
+    if hasattr(ident, "last_seen_at"):
+        ident.last_seen_at = utcnow()
+    if hasattr(ident, "confidence") and not getattr(ident, "confidence", None):
+        ident.confidence = "authoritative"
+
     session.add(ident)
     session.flush()
     return ident
@@ -1018,6 +1114,282 @@ def process_companyfacts_file(
     return inserts_planned, duplicates
 
 
+def _build_sec_filing_urls(
+    cik_raw: str, accession_raw: str, primary_doc: str | None
+) -> dict[str, str | None]:
+    """Build canonical SEC Archive URLs for a filing.
+
+    Args:
+        cik_raw: A 10-digit CIK string (or something int-castable).
+        accession_raw: Accession number as provided by submissions, typically with dashes.
+        primary_doc: Primary document filename from submissions.
+
+    Returns:
+        Dict with index_url, document_url, full_text_url.
+    """
+
+    if not cik_raw or not accession_raw:
+        return {"index_url": None, "document_url": None, "full_text_url": None}
+
+    try:
+        cik = str(int(str(cik_raw))).strip()
+    except Exception:
+        cik = "".join(ch for ch in str(cik_raw) if ch.isdigit()).lstrip("0") or "0"
+
+    accession_raw_s = str(accession_raw).strip()
+    acc_no_dashes = accession_raw_s.replace("-", "")
+
+    base = f"https://www.sec.gov/Archives/edgar/data/{cik}/{acc_no_dashes}"
+    return {
+        "index_url": f"{base}/{accession_raw_s}-index.htm",
+        "document_url": f"{base}/{primary_doc}" if primary_doc else None,
+        "full_text_url": f"{base}/{accession_raw_s}.txt",
+    }
+
+
+def _process_submission_filings(
+    data: dict, entity: Entity, session: SASession
+) -> tuple[int, int]:
+    """Upsert filings from a submissions JSON payload.
+
+    Idempotence:
+      - Uniqueness is (entity_id, accession_number).
+      - We update existing rows with any newly available fields.
+
+    Returns:
+        (inserted_count, updated_count)
+    """
+
+    schema, recent = _resolve_recent_payload(data)
+    if schema not in {"full_submissions", "flattened_recent"} or not _is_nonempty_dict(
+        recent
+    ):
+        return 0, 0
+
+    accession_arr = (
+        recent.get("accessionNumber")
+        if isinstance(recent.get("accessionNumber"), list)
+        else []
+    )
+    form_arr = recent.get("form") if isinstance(recent.get("form"), list) else []
+    filing_date_arr = (
+        recent.get("filingDate") if isinstance(recent.get("filingDate"), list) else []
+    )
+    report_date_arr = (
+        recent.get("reportDate") if isinstance(recent.get("reportDate"), list) else []
+    )
+    primary_doc_arr = (
+        recent.get("primaryDocument")
+        if isinstance(recent.get("primaryDocument"), list)
+        else []
+    )
+
+    if not accession_arr:
+        return 0, 0
+
+    # Best-effort CIK for URL building.
+    cik_raw = data.get("cik")
+
+    inserted = 0
+    updated = 0
+
+    # Iterate using the accession array as the driver; other arrays may be missing/short.
+    for i, acc_raw in enumerate(accession_arr):
+        if not acc_raw:
+            continue
+
+        acc_norm = str(acc_raw).replace("-", "").strip()
+        if not acc_norm:
+            continue
+
+        form_type = None
+        if i < len(form_arr) and form_arr[i]:
+            form_type = str(form_arr[i]).strip()
+        if not form_type:
+            # Without a form type the record isn't very useful; skip safely.
+            continue
+
+        filing_date = None
+        if i < len(filing_date_arr) and filing_date_arr[i]:
+            filing_date = parse_ymd_date(str(filing_date_arr[i]))
+
+        report_date = None
+        if i < len(report_date_arr) and report_date_arr[i]:
+            report_date = parse_ymd_date(str(report_date_arr[i]))
+
+        primary_doc = None
+        if i < len(primary_doc_arr) and primary_doc_arr[i]:
+            primary_doc = str(primary_doc_arr[i]).strip()
+
+        urls = _build_sec_filing_urls(
+            str(cik_raw) if cik_raw is not None else "", str(acc_raw), primary_doc
+        )
+
+        with session.no_autoflush:
+            existing = (
+                session.query(SecFiling)
+                .filter_by(entity_id=entity.id, accession_number=acc_norm)
+                .first()
+            )
+
+        if existing is None:
+            session.add(
+                SecFiling(
+                    entity_id=entity.id,
+                    accession_number=acc_norm,
+                    form_type=form_type,
+                    filing_date=filing_date,
+                    report_date=report_date,
+                    primary_document=primary_doc,
+                    index_url=urls.get("index_url"),
+                    document_url=urls.get("document_url"),
+                    full_text_url=urls.get("full_text_url"),
+                    source="sec_submissions_local",
+                )
+            )
+            inserted += 1
+            continue
+
+        # Upsert/update path: only fill missing fields or update when the value differs.
+        changed = False
+        if form_type and existing.form_type != form_type:
+            existing.form_type = form_type
+            changed = True
+        if filing_date and existing.filing_date != filing_date:
+            existing.filing_date = filing_date
+            changed = True
+        if report_date and existing.report_date != report_date:
+            existing.report_date = report_date
+            changed = True
+        if primary_doc and existing.primary_document != primary_doc:
+            existing.primary_document = primary_doc
+            changed = True
+
+        # URLs: keep them updated if we now can build them.
+        if urls.get("index_url") and existing.index_url != urls.get("index_url"):
+            existing.index_url = urls.get("index_url")
+            changed = True
+        if urls.get("document_url") and existing.document_url != urls.get(
+            "document_url"
+        ):
+            existing.document_url = urls.get("document_url")
+            changed = True
+        if urls.get("full_text_url") and existing.full_text_url != urls.get(
+            "full_text_url"
+        ):
+            existing.full_text_url = urls.get("full_text_url")
+            changed = True
+
+        if changed:
+            updated += 1
+
+    if inserted or updated:
+        session.flush()
+
+    logger.info(
+        "submissions filings upsert | entity_id=%s schema=%s inserted=%s updated=%s",
+        entity.id,
+        schema,
+        inserted,
+        updated,
+    )
+
+    return inserted, updated
+
+
+def _process_submission_tickers(
+    data: dict, entity: Entity, session: SASession
+) -> tuple[int, int, int]:
+    """Upsert tickers from a submissions payload.
+
+    Creates:
+      - sec_tickers rows (ticker + optional exchange)
+      - entity_identifiers rows with scheme='ticker_exchange' value='{TICKER}:{EXCHANGE}'
+
+    Returns:
+        (sec_tickers_inserted, identifiers_inserted_or_matched, skipped)
+    """
+
+    tickers = data.get("tickers") if isinstance(data.get("tickers"), list) else []
+    exchanges = data.get("exchanges") if isinstance(data.get("exchanges"), list) else []
+
+    if not tickers:
+        return 0, 0, 0
+
+    sec_inserted = 0
+    ident_count = 0
+    skipped = 0
+
+    for i, t in enumerate(tickers):
+        if not t:
+            skipped += 1
+            continue
+        ticker = str(t).strip().upper()
+        if not ticker:
+            skipped += 1
+            continue
+
+        exchange = None
+        if i < len(exchanges) and exchanges[i]:
+            exchange = str(exchanges[i]).strip().upper()
+
+        # Upsert into sec_tickers (unique on ticker,exchange). If unique belongs
+        # to a different entity, let integrity error surface (data conflict).
+        with session.no_autoflush:
+            existing = (
+                session.query(SecTicker)
+                .filter_by(ticker=ticker, exchange=exchange)
+                .first()
+            )
+
+        if existing is None:
+            session.add(
+                SecTicker(
+                    entity_id=entity.id,
+                    ticker=ticker,
+                    exchange=exchange,
+                    is_active=1,
+                    source="sec_submissions_local",
+                )
+            )
+            sec_inserted += 1
+        else:
+            # Ensure it's marked active and associated entity matches.
+            if existing.entity_id != entity.id:
+                raise IntegrityError(
+                    f"Ticker conflict: {ticker}:{exchange} already belongs to entity_id={existing.entity_id}",
+                    params=None,
+                    orig=None,
+                )
+            if getattr(existing, "is_active", 1) != 1:
+                existing.is_active = 1
+
+        # Also record identity mapping: ticker_exchange expects "TICKER:MIC".
+        if exchange:
+            _get_or_create_entity_identifier(
+                session,
+                entity_id=entity.id,
+                scheme="ticker_exchange",
+                value=f"{ticker}:{exchange}",
+                issuer="sec_submissions",
+            )
+            ident_count += 1
+
+    if sec_inserted or ident_count:
+        session.flush()
+
+    logger.info(
+        "submissions tickers upsert | entity_id=%s tickers=%s sec_inserted=%s identifiers=%s skipped=%s",
+        entity.id,
+        len(tickers),
+        sec_inserted,
+        ident_count,
+        skipped,
+    )
+
+    return sec_inserted, ident_count, skipped
+
+
 @timed("process_submissions_file", logger_obj=logger)
 def process_submissions_file(
     *,
@@ -1049,6 +1421,21 @@ def process_submissions_file(
     )
     if not filing_dates and not report_dates:
         return schema, 0, 0, "submissions_missing_dates"
+
+    # Structured persistence for filings/tickers (best-effort; doesn't affect daily_values behavior).
+    try:
+        with session.no_autoflush:
+            entity = session.query(Entity).filter_by(id=entity_id).first()
+        if entity is not None:
+            _process_submission_filings(data, entity, session)
+            _process_submission_tickers(data, entity, session)
+    except Exception as e:
+        logger.warning(
+            "submissions structured upsert failed | entity_id=%s filename=%s err=%s",
+            entity_id,
+            filename,
+            e,
+        )
 
     rows: list[dict] = []
     inserts_planned = 0
@@ -1107,13 +1494,30 @@ def _source_file_key(source: str, rel_path: str) -> str:
 
 
 def _mark_file_processed(
-    session: SASession | None, entity_id: int, source_file: str
+    session: SASession | None,
+    entity_id: int,
+    source_file: str,
+    *,
+    source: str = "local",
+    record_count: int | None = None,
 ) -> None:
     session = _default_session(session)
-    """Insert a processed marker row (idempotent)."""
+    """Insert a processed marker row (idempotent).
+
+    Notes:
+      - `source` is a provenance tag for where the file came from.
+      - `record_count` is best-effort and represents the number of logical records
+        observed/attempted for this file (e.g. planned inserts), not the number of
+        newly inserted rows.
+    """
     stmt = (
         sqlite_insert(FileProcessing)
-        .values(entity_id=entity_id, source_file=source_file)
+        .values(
+            entity_id=entity_id,
+            source_file=source_file,
+            source=source,
+            record_count=record_count,
+        )
         .prefix_with("OR IGNORE")
     )
     session.execute(stmt)
@@ -1276,10 +1680,7 @@ def _run(
                         )
                     return entity_cache[key]
                 entity_id = get_or_create_entity(
-                    cik,
-                    company_name=company_name,
-                    metadata=metadata,
-                    session=session,
+                    cik, company_name=company_name, metadata=metadata, session=session
                 ).id
                 entity_cache[key] = entity_id
                 return entity_id
@@ -1440,7 +1841,11 @@ def _run(
                         continue
 
                     _mark_file_processed(
-                        session, entity_id=entity_id, source_file=file_key
+                        session,
+                        entity_id=entity_id,
+                        source_file=file_key,
+                        source="local",
+                        record_count=inserts_planned,
                     )
 
                     try:

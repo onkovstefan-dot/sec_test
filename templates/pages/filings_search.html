@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Filing Search</h1>
+
+<form id="searchForm" method="get" action="/filings/search" style="margin-bottom: 1rem;">
+    <label>Keywords (q)
+        <input type="text" name="q" value="{{ q }}" style="width: 32rem;" />
+    </label>
+    <label>Form type
+        <input type="text" name="form_type" value="{{ form_type }}" placeholder="10-K" />
+    </label>
+    <label>CIK
+        <input type="text" name="cik" value="{{ cik }}" placeholder="0000320193" />
+    </label>
+    <label>Date from
+        <input type="date" name="date_from" value="{{ date_from }}" />
+    </label>
+    <label>Date to
+        <input type="date" name="date_to" value="{{ date_to }}" />
+    </label>
+    <button type="submit">Search</button>
+</form>
+
+<div id="results"></div>
+
+<script>
+    (function () {
+        async function runSearchFromQuery() {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.get('q') && !params.get('form_type') && !params.get('cik')) {
+                return;
+            }
+
+            const apiUrl = '/api/v1/filings/search?' + params.toString();
+            const res = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
+            const data = await res.json();
+
+            const el = document.getElementById('results');
+            el.innerHTML = '';
+
+            const header = document.createElement('div');
+            header.textContent = `Source: ${data.source} | Count: ${data.count}`;
+            header.style.marginBottom = '0.5rem';
+            el.appendChild(header);
+
+            if (!data.results || data.results.length === 0) {
+                const empty = document.createElement('div');
+                empty.textContent = 'No results.';
+                el.appendChild(empty);
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.border = '1';
+
+            const thead = document.createElement('thead');
+            thead.innerHTML = '<tr><th>Form</th><th>Filing date</th><th>Accession</th><th>Link</th></tr>';
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            for (const r of data.results) {
+                const tr = document.createElement('tr');
+                const form = r.form_type || '';
+                const filed = r.filing_date || r.filed_at || '';
+                const acc = r.accession_number || '';
+                const link = r.document_url || r.index_url || r.link || '';
+                tr.innerHTML = `
+        <td>${form}</td>
+        <td>${filed}</td>
+        <td>${acc}</td>
+        <td>${link ? `<a href="${link}" target="_blank" rel="noreferrer">open</a>` : ''}</td>
+      `;
+                tbody.appendChild(tr);
+            }
+            table.appendChild(tbody);
+            el.appendChild(table);
+        }
+
+        runSearchFromQuery();
+    })();
+</script>
+
+{% endblock %}

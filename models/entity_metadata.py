@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 
 from models import Base
 
@@ -77,6 +77,10 @@ class EntityMetadata(Base):
 
     # Former names (stored as JSON array)
     former_names = Column(String, nullable=True)  # JSON array of {name, from, to}
+
+    # Multi-source bookkeeping
+    data_sources = Column(String, nullable=True)  # JSON or comma-separated source names
+    last_sec_sync_at = Column(DateTime, nullable=True)
 
     # Deprecated fields (kept for backwards compatibility)
     country = Column(String, nullable=True)

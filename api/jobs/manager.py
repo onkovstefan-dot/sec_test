@@ -199,6 +199,114 @@ class RecreateSqliteDbJob:
         return True
 
 
+class SecApiIngestJob:
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._state = JobState()
+        self._proc: subprocess.Popen[str] | None = None
+
+    def get_state(self) -> Dict[str, Any]:
+        with self._lock:
+            return self._state.as_dict()
+
+    def request_stop(self) -> None:
+        with self._lock:
+            self._state.stop_requested = True
+            proc = self._proc
+
+        if proc is None:
+            return
+
+        try:
+            proc.terminate()
+        except Exception:
+            pass
+
+    def start(
+        self,
+        *,
+        form_types: str | None = None,
+        limit: int | None = None,
+        workers: int | None = None,
+    ) -> bool:
+        """Start jobs.sec_api_ingest.main() in a background subprocess."""
+        with self._lock:
+            if self._state.running:
+                return False
+            self._state.running = True
+            self._state.started_at = time.time()
+            self._state.ended_at = None
+            self._state.error = None
+            self._state.stop_requested = False
+            self._proc = None
+
+        def _runner() -> None:
+            try:
+                Base.metadata.create_all(bind=engine)
+
+                with self._lock:
+                    if self._state.stop_requested:
+                        return
+
+                cmd = [
+                    sys.executable,
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(__file__)),
+                        "..",
+                        "..",
+                        "jobs",
+                        "sec_api_ingest.py",
+                    ),
+                ]
+
+                if form_types:
+                    cmd.extend(["--form-types", str(form_types)])
+                if limit is not None:
+                    cmd.extend(["--limit", str(int(limit))])
+                if workers is not None:
+                    cmd.extend(["--workers", str(int(workers))])
+
+                cmd = [os.path.normpath(p) for p in cmd]
+
+                proc = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                )
+                with self._lock:
+                    self._proc = proc
+
+                rc = proc.wait()
+                if rc != 0 and rc is not None:
+                    with self._lock:
+                        self._state.error = (
+                            f"sec_api_ingest exited with code {rc}. "
+                            "See logs for details."
+                        )
+            except Exception:
+                with self._lock:
+                    self._state.error = traceback.format_exc()
+            finally:
+                with self._lock:
+                    proc = self._proc
+                if proc is not None and proc.poll() is None:
+                    try:
+                        proc.kill()
+                    except Exception:
+                        pass
+
+                with self._lock:
+                    self._proc = None
+                    self._state.running = False
+                    self._state.ended_at = time.time()
+
+        t = threading.Thread(target=_runner, name="sec_api_ingest", daemon=True)
+        t.start()
+        return True
+
+
 # Module-level singletons (same effective semantics as prior global dicts/locks in routes.py)
 populate_daily_values_job = PopulateDailyValuesJob()
 recreate_sqlite_db_job = RecreateSqliteDbJob()
+sec_api_ingest_job = SecApiIngestJob()

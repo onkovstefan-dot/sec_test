@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, Text
+from sqlalchemy import Column, Integer, ForeignKey, Text, String
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import relationship, reconstructor
 from models import Base
@@ -25,9 +25,16 @@ class DailyValue(Base):
     date_id = Column(Integer, ForeignKey("dates.id"), nullable=False)
     value_name_id = Column(Integer, ForeignKey("value_names.id"), nullable=False)
 
+    # Multi-source / traceability (nullable for backwards compatibility)
+    source = Column(String, nullable=True)
+    period_type = Column(String, nullable=True)
+    start_date_id = Column(Integer, ForeignKey("dates.id"), nullable=True)
+    accession_number = Column(String, nullable=True)
+
     # Optional ORM relationships
     entity = relationship("Entity")
-    date = relationship("DateEntry")
+    date = relationship("DateEntry", foreign_keys=[date_id])
+    start_date = relationship("DateEntry", foreign_keys=[start_date_id])
     value_name = relationship("ValueName")
 
     # Expose unit via the ValueName relationship (ValueName.unit_id -> units.id)
