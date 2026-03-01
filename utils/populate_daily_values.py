@@ -161,7 +161,7 @@ def timed(
 #   3) Dynamic calculation (if DEFAULT_WORKERS <= 0)
 #
 # Set this to <= 0 to auto-pick based on available CPUs.
-DEFAULT_WORKERS = 4
+DEFAULT_WORKERS = -1
 
 
 def _dynamic_default_workers() -> int:
@@ -188,8 +188,8 @@ def _resolve_workers(cli_workers: int | None) -> int:
 # Internal-only flag used when this module spawns its own worker processes.
 INTERNAL_ARG_WORKER_INDEX = "--_worker-index"
 
-# Setup logging (shared app logger; per-file logs in ./logs/)
-logger = get_logger(__name__)
+# Setup logging (shared app logger; per-process log files so multiprocessing workers don't interleave output.)
+logger = get_logger(__name__, process_id=os.getpid())
 
 # Previously we populated from raw_data/submissions.
 # Companyfacts is where the numeric facts/metrics live.
@@ -948,6 +948,80 @@ def _load_processed_file_keys(session: SASession | None = None) -> set[str]:
         return set()
 
 
+def _prompt_yes_no(prompt: str, *, default_no: bool = True) -> bool:
+    """Interactive confirmation prompt.
+
+    Returns True if user confirms.
+    """
+    suffix = "[y/N]" if default_no else "[Y/n]"
+    while True:
+        try:
+            resp = input(f"{prompt} {suffix}: ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            return False
+        if not resp:
+            return not default_no
+        if resp in {"y", "yes"}:
+            return True
+        if resp in {"n", "no"}:
+            return False
+        print("Please enter 'y' or 'n'.")
+
+
+def _summarize_run_setup(*, db_path: str, workers: int) -> dict:
+    """Compute a run summary for an interactive confirmation prompt.
+
+    Summary is best-effort and intended for human sanity-checking.
+    """
+    eng = _make_engine(db_path)
+    Base.metadata.create_all(eng)
+    SessionLocal = sessionmaker(bind=eng, future=True)
+
+    with SessionLocal() as s:
+        _configure_sqlite_for_concurrency(s)
+        s.commit()
+
+        files_all = discover_json_files(RAW_DATA_DIR)
+        # Match the ordering used by workers.
+        files_all = sorted(files_all, key=lambda t: (t[0], t[1], t[2]))
+
+        processed = _load_processed_file_keys(s)
+
+        remaining_files: list[tuple[str, str, str]] = []
+        for source, file_path, filename in files_all:
+            rel_path = os.path.relpath(file_path, RAW_DATA_DIR)
+            file_key = _source_file_key(source, rel_path)
+            if file_key in processed:
+                continue
+            remaining_files.append((source, file_path, filename))
+
+        total = len(files_all)
+        skipped = total - len(remaining_files)
+        left = len(remaining_files)
+
+        # Estimated distribution by deterministic sharding.
+        est_per_worker = []
+        if workers <= 1:
+            est_per_worker = [left]
+        else:
+            for wi in range(workers):
+                est_per_worker.append(
+                    len(
+                        _chunked_files(
+                            remaining_files, workers=workers, worker_index=wi
+                        )
+                    )
+                )
+
+        return {
+            "workers": workers,
+            "total_files": total,
+            "skipped_files": skipped,
+            "files_left": left,
+            "est_per_worker": est_per_worker,
+        }
+
+
 def _run(
     *,
     workers: int = 1,
@@ -1308,7 +1382,38 @@ def main(argv: list[str] | None = None) -> None:
         _run(workers=workers, worker_index=worker_index, db_path=args.db)
         return
 
-    # Parent process: spawn N worker processes and let them split work by index.
+    # Parent process: show a confirmation prompt before doing any work/spawning.
+    try:
+        summary = _summarize_run_setup(db_path=args.db, workers=workers)
+        est = summary["est_per_worker"]
+        est_str = (
+            ", ".join(f"w{idx + 1}={cnt}" for idx, cnt in enumerate(est))
+            if est
+            else "(n/a)"
+        )
+
+        print("\npopulate_daily_values.py planned setup")
+        print(f"- workers: {summary['workers']}")
+        print(
+            f"- files: total={summary['total_files']} skipped(already processed)={summary['skipped_files']} left_to_process={summary['files_left']}"
+        )
+        print(f"- estimated distribution per worker (files): {est_str}")
+
+        if summary["files_left"] == 0:
+            print("Nothing to do (all files appear already processed).")
+            return
+
+        if not _prompt_yes_no("Proceed with this setup?", default_no=True):
+            print("Aborted.")
+            return
+
+    except Exception as e:
+        # Do not block execution if the summary fails; just log and continue.
+        logger.warning("Could not compute run summary for prompt: %s", e)
+        if not _prompt_yes_no("Proceed without summary?", default_no=True):
+            print("Aborted.")
+            return
+
     if workers == 1:
         _run(workers=1, worker_index=0, db_path=args.db)
         return

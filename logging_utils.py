@@ -91,17 +91,29 @@ def configure_app_logging(level_name: str = "INFO") -> logging.Logger:
     return app_logger
 
 
-def get_logger(module_name: str | None = None) -> logging.Logger:
+def get_logger(
+    module_name: str | None = None, *, process_id: int | None = None
+) -> logging.Logger:
     """Get a module-specific logger that writes to its own log file.
+
+    Args:
+        module_name: Typically __name__.
+        process_id: Optional identifier to disambiguate per-process log files.
+            If provided, the log file name will include a `_process_<id>` suffix.
 
     Example:
         logger = get_logger(__name__)
+        worker_logger = get_logger(__name__, process_id=os.getpid())
     """
 
     base = configure_app_logging(os.getenv("LOG_LEVEL", "INFO"))
 
     child_name = module_name or "app"
-    logger = logging.getLogger(f"{_APP_LOGGER_NAME}.{child_name}")
+    logger_name = f"{_APP_LOGGER_NAME}.{child_name}"
+    if process_id is not None:
+        logger_name = f"{logger_name}.process_{int(process_id)}"
+
+    logger = logging.getLogger(logger_name)
 
     # Ensure the child has a per-file handler (only once).
     if not getattr(logger, "_file_configured", False):
@@ -114,7 +126,11 @@ def get_logger(module_name: str | None = None) -> logging.Logger:
             datefmt="%Y-%m-%dT%H:%M:%S",
         )
 
-        file_name = _sanitize_filename(child_name) + ".log"
+        file_base = _sanitize_filename(child_name)
+        if process_id is not None:
+            file_base = f"{file_base}_process_{int(process_id)}"
+
+        file_name = file_base + ".log"
         log_path = os.path.join(_logs_dir(), file_name)
 
         fh = TimedRotatingFileHandler(
